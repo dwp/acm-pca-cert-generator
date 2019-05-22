@@ -158,8 +158,8 @@ def parse_args(args):
         required=True,
         type=check_validity_period,
         env_var="CERTGEN_VALIDITY_PERIOD",
-        help="How long the certificate is valid for, e.g. 1d, 1m, 1y for 1 "
-        "day, 1 month and 1 year respectively",
+        help="How long the certificate is valid for, e.g. 1d, 1m, 1y for 1 day, "
+        "1 month and 1 year respectively",
     )
     p.add("--log-level", default="INFO", env_var="CERTGEN_LOG_LEVEL")
 
