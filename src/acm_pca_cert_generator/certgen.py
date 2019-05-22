@@ -281,7 +281,7 @@ def generate_keystore(
     Args:
         keystore_path (str): The path at which to save the keystore
         keystore_password (str): The password to protect the keystore with
-        pkey (str): The base64 PEM-encoded private key to store
+        priv_key (str): The base64 PEM-encoded private key to store
         cert (str): The base64 PEM-encoded certificate signed by ACM PCA
         alias (str): The alias under which to store the key pair
         priv_key_password (str): The password to protect the private key with
@@ -317,7 +317,7 @@ def generate_truststore(truststore_path, truststore_password, certs):
     Args:
         truststore_path (str): The path at which to save the truststore
         truststore_password (str): The password to protect the truststore with
-        certs (dict): An array of dicts containing aliases and certificate paths
+        certs (list): A list of dicts containing aliases and certificate paths
                       for SSL certs to add to the truststore, e.g.:
                       [{"alias": "testcert", "cert": "/tmp/mycert.pem"}]
 
