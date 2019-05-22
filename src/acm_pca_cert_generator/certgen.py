@@ -362,7 +362,7 @@ def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
     return certs
 
 
-def _setupLogging(log_level):
+def _setup_logging(log_level):
     level = logging.getLevelName(log_level.upper())
     logger.setLevel(level)
     boto3.set_stream_logger("boto3.resources", level)
@@ -371,7 +371,7 @@ def _setupLogging(log_level):
 
 def _main(args):
     args = parse_args(args)
-    _setupLogging(args.log_level)
+    _setup_logging(args.log_level)
     key = generate_private_key(args.key_type, args.key_length)
 
     subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
