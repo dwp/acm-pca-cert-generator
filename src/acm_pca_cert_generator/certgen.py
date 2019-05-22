@@ -161,7 +161,7 @@ def parse_args(args):
         help="How long the certificate is valid for, e.g. 1d, 1m, 1y for 1 "
         "day, 1 month and 1 year respectively",
     )
-    p.add("--log-level", default="DEBUG", env_var="CERTGEN_LOG_LEVEL")
+    p.add("--log-level", default="INFO", env_var="CERTGEN_LOG_LEVEL")
 
     return p.parse_args(args)
 
