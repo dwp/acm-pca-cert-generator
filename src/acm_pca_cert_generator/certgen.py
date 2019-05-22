@@ -230,7 +230,6 @@ def create_validity_dict(validity_period):
               validity period
 
     """
-    validity_length = int(validity_period[:-1])
     validity_suffix = validity_period[-1:]
     if validity_suffix == "d":
         validity_unit = "DAYS"
@@ -239,7 +238,7 @@ def create_validity_dict(validity_period):
     elif validity_suffix == "y":
         validity_unit = "YEARS"
 
-    return {"Value": validity_length, "Type": validity_unit}
+    return {"Value": int(validity_period[:-1]), "Type": validity_unit}
 
 
 def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
