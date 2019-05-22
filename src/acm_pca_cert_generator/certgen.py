@@ -11,7 +11,7 @@ import re
 import sys
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("certgen")
 
 
 def check_key_length(value):
@@ -161,7 +161,12 @@ def parse_args(args):
         help="How long the certificate is valid for, e.g. 1d, 1m, 1y for 1 day, "
         "1 month and 1 year respectively",
     )
-    p.add("--log-level", default="INFO", env_var="CERTGEN_LOG_LEVEL")
+    p.add(
+        "--log-level",
+        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+        default="INFO",
+        env_var="CERTGEN_LOG_LEVEL",
+    )
 
     return p.parse_args(args)
 
@@ -177,6 +182,7 @@ def generate_private_key(key_type, key_bits):
         OpenSSL.Crypto.PKey: The OpenSSL private key
 
     """
+    logger.info("Generating private key")
     key = OpenSSL.crypto.PKey()
     if key_type == "RSA":
         openssl_key_type = OpenSSL.crypto.TYPE_RSA
@@ -207,6 +213,7 @@ def generate_csr(pkey, digest, subject_details):
         KeyError: If subject_details doesn't contain all of the required keys
 
     """
+    logger.info("Generating Certificate Signing Request")
     csr = OpenSSL.crypto.X509Req()
     subject = csr.get_subject()
 
@@ -255,7 +262,7 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
         str: The base64 PEM-encoded certificate chain of the signed CSR
 
     """
-    logger.warn("Signing cert")
+    logger.info("Requesting cert to be signed by ACM PCA")
     cert_arn = acmpca_client.issue_certificate(
         CertificateAuthorityArn=ca_arn,
         Csr=csr,
@@ -263,11 +270,11 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
         Validity=create_validity_dict(validity_period),
     )["CertificateArn"]
 
-    logger.warn("Waiting for cert to be signed")
+    logger.info("Waiting for cert to be signed by ACM PCA")
     waiter = acmpca_client.get_waiter("certificate_issued")
     waiter.wait(CertificateAuthorityArn=ca_arn, CertificateArn=cert_arn)
 
-    logger.warn("Retrieving signed cert")
+    logger.info("Retrieving signed cert from ACM PCA")
     return acmpca_client.get_certificate(
         CertificateAuthorityArn=ca_arn, CertificateArn=cert_arn
     )["CertificateChain"]
@@ -287,6 +294,7 @@ def generate_keystore(
         priv_key_password (str): The password to protect the private key with
 
     """
+    logger.info("Generating Java KeyStore")
     pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, priv_key)
     dumped_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pkey)
 
@@ -322,6 +330,7 @@ def generate_truststore(truststore_path, truststore_password, certs):
                       [{"alias": "testcert", "cert": "/tmp/mycert.pem"}]
 
     """
+    logger.info("Generating Java TrustStore")
     trusted_certs = []
     for alias, cert in certs.items():
         with open(cert) as f:
@@ -363,10 +372,10 @@ def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
 
 
 def _setup_logging(log_level):
-    level = logging.getLevelName(log_level.upper())
+    level = logging.getLevelName(log_level)
     logger.setLevel(level)
-    boto3.set_stream_logger("boto3.resources", level)
-    logger.debug("Set level to {}".format(log_level))
+    boto3.set_stream_logger("", level)
+    logger.info("Logging level set to {}".format(log_level))
 
 
 def _main(args):
