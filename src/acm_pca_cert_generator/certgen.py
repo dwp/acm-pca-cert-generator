@@ -418,7 +418,7 @@ def main():
     which enables args to be passed in.
 
     """
-    _main(sys.argv)
+    _main(sys.argv[1:])
 
 
 if __name__ == "__main__":
