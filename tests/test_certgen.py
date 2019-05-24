@@ -43,12 +43,12 @@ def test_generate_private_key():
 
 def test_generate_private_key_invalid_type():
     with pytest.raises(ValueError):
-        pkey = certgen.generate_private_key("TSA", 2048)
+        certgen.generate_private_key("TSA", 2048)
 
 
 def test_generate_private_key_invalid_length():
     with pytest.raises(TypeError):
-        pkey = certgen.generate_private_key("RSA", "notanint")
+        certgen.generate_private_key("RSA", "notanint")
 
 
 valid_subject_details = {
