@@ -1,5 +1,7 @@
 # acm-pca-cert-generator
-Automatic creation of TLS certs generated with AWS' ACM PCA service
+`acm-pca-cert-generator` generates a Java KeyStore containing a keypair signed
+by ACM PCA, and a Java TrustStore containing one or more trusted certificates
+held on S3.
 
 # Installation:
 
@@ -24,7 +26,14 @@ usage: certgen.py [-h] --key-type {RSA,DSA} --key-length KEY_LENGTH
                   SUBJECT_CN --subject-emailaddress SUBJECT_EMAILADDRESS
                   --ca-arn CA_ARN --signing-algorithm
                   {SHA256WITHECDSA,SHA384WITHECDSA,SHA512WITHECDSA,SHA256WITHRSA,SHA384WITHRSA,SHA512WITHRSA}
-                  --validity-period VALIDITY_PERIOD [--log-level LOG_LEVEL]
+                  --validity-period VALIDITY_PERIOD --keystore-path
+                  KEYSTORE_PATH --keystore-password KEYSTORE_PASSWORD
+                  --private-key-alias PRIVATE_KEY_ALIAS
+                  [--private-key-password PRIVATE_KEY_PASSWORD]
+                  --truststore-path TRUSTSTORE_PATH --truststore-password
+                  TRUSTSTORE_PASSWORD --truststore-aliases TRUSTSTORE_ALIASES
+                  --truststore-certs TRUSTSTORE_CERTS
+                  [--log-level {CRITICAL,ERROR,WARNING,INFO,DEBUG}]
 
 Args that start with '--' (eg. --key-type) can also be set in a config file
 (/etc/acm_pca_cert_generator/acm_pca_cert_generator.conf or
@@ -70,7 +79,33 @@ optional arguments:
                         How long the certificate is valid for, e.g. 1d, 1m, 1y
                         for 1 day, 1 month and 1 year respectively [env var:
                         CERTGEN_VALIDITY_PERIOD]
-  --log-level LOG_LEVEL
+  --keystore-path KEYSTORE_PATH
+                        Filename of the keystore to save the signed keypair to
+                        [env var: CERTGEN_KEYSTORE_PATH]
+  --keystore-password KEYSTORE_PASSWORD
+                        Password for the Java Keystore [env var:
+                        CERTGEN_KEYSTORE_PASSWORD]
+  --private-key-alias PRIVATE_KEY_ALIAS
+                        The alias to store the private key under in the Java
+                        KeyStore [env var: CERTGEN_PRIVATE_KEY_ALIAS]
+  --private-key-password PRIVATE_KEY_PASSWORD
+                        The password used to protect [env var:
+                        CERTGEN_PRIVATE_KEY_PASSWORD]
+  --truststore-path TRUSTSTORE_PATH
+                        Filename of the keystore to save trusted certificates
+                        to [env var: CERTGEN_TRUSTSTORE_PATH]
+  --truststore-password TRUSTSTORE_PASSWORD
+                        Password for the Java TrustStore [env var:
+                        CERTGEN_TRUSTSTORE_PASSWORD]
+  --truststore-aliases TRUSTSTORE_ALIASES
+                        Comma-separated list of aliases to use for entries in
+                        the Java TrustStore [env var:
+                        CERTGEN_TRUSTSTORE_ALIASES]
+  --truststore-certs TRUSTSTORE_CERTS
+                        Comma-separated list of S3 URIs pointing at
+                        certificates to be added to the Java TrustStore [env
+                        var: CERTGEN_TRUSTSTORE_CERTS]
+  --log-level {CRITICAL,ERROR,WARNING,INFO,DEBUG}
                         [env var: CERTGEN_LOG_LEVEL]
 ```
 
@@ -90,7 +125,11 @@ acm-pca-cert-generator --key-type RSA --key-length 2048 --subject-c "GB" \
 --subject-ou "IT Department" --subject-cn "myfqdn.example.com" \
 --subject-emailaddress "me@example.com" \
 --ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/506a130d-8519-45dc-903d-2a30709d6a33" \
---signing-algorithm "SHA256WITHRSA" --validity-period=1d
+--signing-algorithm "SHA256WITHRSA" --validity-period=1d \
+--keystore-path /tmp/keystore.jks --keystore-password P4ssw0rd1 \
+---private-key-alias mykey --truststore-path /tmp/truststore.jks \
+--truststore-password P4ssw0rd2 --truststore-aliases ca1,ca2 \
+--truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem
 ```
 
 

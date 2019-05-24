@@ -27,6 +27,20 @@ valid_args = [
     "SHA384WITHRSA",
     "--validity-period",
     "1d",
+    "--keystore-path",
+    "tmp/keystore.jks",
+    "--keystore-password",
+    "password1",
+    "--private-key-alias",
+    "mypk",
+    "--truststore-path",
+    "tmp/truststore.jks",
+    "--truststore-password",
+    "password2",
+    "--truststore-aliases",
+    "trustedcert1,trustedcert2",
+    "--truststore-certs",
+    "s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem",
 ]
 
 
@@ -91,4 +105,37 @@ def test_parse_args_missing_signing_algorithm():
 
 def test_parse_args_missing_key_type():
     missing_arg_test(["--validity-period", "1d"])
+
+
+def test_parse_args_missing_keystore_path():
+    missing_arg_test(["--keystore-path", "tmp/keystore.jks"])
+
+
+def test_parse_args_missing_keystore_password():
+    missing_arg_test(["--keystore-password", "password1"])
+
+
+def test_parse_args_missing_private_key_alias():
+    missing_arg_test(["--private-key-alias", "mypk"])
+
+
+def test_parse_args_missing_truststore_path():
+    missing_arg_test(["--truststore-path", "tmp/truststore.jks"])
+
+
+def test_parse_args_missing_truststore_password():
+    missing_arg_test(["--truststore-password", "password2"])
+
+
+def test_parse_args_missing_truststore_aliases():
+    missing_arg_test(["--truststore-aliases", "trustedcert1,trustedcert2"])
+
+
+def missing_arg_test_missing_truststore_certs():
+    missing_arg_test(
+        [
+            "--truststore-certs",
+            "s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem",
+        ]
+    )
 

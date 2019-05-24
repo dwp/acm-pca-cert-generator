@@ -162,6 +162,54 @@ def parse_args(args):
         "1 month and 1 year respectively",
     )
     p.add(
+        "--keystore-path",
+        required=True,
+        env_var="CERTGEN_KEYSTORE_PATH",
+        help="Filename of the keystore to save the signed keypair to",
+    )
+    p.add(
+        "--keystore-password",
+        required=True,
+        env_var="CERTGEN_KEYSTORE_PASSWORD",
+        help="Password for the Java Keystore",
+    )
+    p.add(
+        "--private-key-alias",
+        required=True,
+        env_var="CERTGEN_PRIVATE_KEY_ALIAS",
+        help="The alias to store the private key under in the Java KeyStore",
+    )
+    p.add(
+        "--private-key-password",
+        env_var="CERTGEN_PRIVATE_KEY_PASSWORD",
+        help="The password used to protect ",
+    )
+    p.add(
+        "--truststore-path",
+        required=True,
+        env_var="CERTGEN_TRUSTSTORE_PATH",
+        help="Filename of the keystore to save trusted certificates to",
+    )
+    p.add(
+        "--truststore-password",
+        required=True,
+        env_var="CERTGEN_TRUSTSTORE_PASSWORD",
+        help="Password for the Java TrustStore",
+    )
+    p.add(
+        "--truststore-aliases",
+        required=True,
+        env_var="CERTGEN_TRUSTSTORE_ALIASES",
+        help="Comma-separated list of aliases to use for entries in the Java TrustStore",
+    )
+    p.add(
+        "--truststore-certs",
+        required=True,
+        env_var="CERTGEN_TRUSTSTORE_CERTS",
+        help="Comma-separated list of S3 URIs pointing at certificates to be "
+        "added to the Java TrustStore",
+    )
+    p.add(
         "--log-level",
         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
         default="INFO",
@@ -400,12 +448,12 @@ def _main(args):
         args.keystore_password,
         key,
         cert,
-        args.key_alias,
+        args.private_key_alias,
         args.private_key_password,
     )
 
     trusted_certs = parse_trusted_cert_arg(
-        args.trusted_cert_aliases, args.trusted_certs
+        args.truststore_aliases, args.truststore_certs
     )
     generate_truststore(args.truststore_path, args.truststore_password, trusted_certs)
 
