@@ -20,6 +20,7 @@ jobs:
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
           VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
           VERSION_NUMBER=$(echo $VERSION | sed 's/^v\(.*\)$/\1/')
+          sed -i -e "s/version=\"0.0.0\"/$VERSION_NUMBER/" setup.py
           python setup.py sdist --dist-dir artifacts
 
     - persist_to_workspace:

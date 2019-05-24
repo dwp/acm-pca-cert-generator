@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="acm_pca_cert_generator",
-    version="0.0.1",
+    version="0.0.0",
     author="Matt Burgess",
     author_email="matthewburgess@digital.uc.dwp.gov.uk",
     description="Generate certs using ACM PCA",
