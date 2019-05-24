@@ -9,7 +9,11 @@ import logging
 import os
 import re
 import sys
-from urlparse import urlparse
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 logger = logging.getLogger("certgen")
