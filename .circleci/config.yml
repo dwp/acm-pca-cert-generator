@@ -14,13 +14,14 @@ jobs:
     - run:
         name: create dist package
         command: |
-          pip install bump2version
+          pip install --user bump2version tox
           set +o pipefail
           LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name'
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
           sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\" setup.py
           bump2version minor --current-version $LATEST_VERSION
+          tox
           python setup.py sdist --dist-dir artifacts
 
     - persist_to_workspace:
@@ -36,6 +37,7 @@ jobs:
     - run:
         name: "Publish Release on GitHub"
         command: |
+          pip install --user bump2version
           set -u
           set +o pipefail
           LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name'
@@ -48,7 +50,10 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-    - tagrelease:
+    - build
+    - publish-github-release:
+        requires:
+        - build
         filters:
           branches:
             only: master
