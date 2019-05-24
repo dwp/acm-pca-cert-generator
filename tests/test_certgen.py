@@ -6,7 +6,7 @@ import jks
 import logging
 import pytest
 from acm_pca_cert_generator import certgen
-from botocore.stub import Stubber
+from botocore.stub import Stubber, ANY
 from collections import Counter
 
 
@@ -184,3 +184,30 @@ def test_parse_trusted_cert_arg_mismatched_lengths():
     trust_certs = "s3://certbucket"
     with pytest.raises(ValueError):
         certs = certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
+
+
+def test_generate_truststore():
+    trust_aliases = "myca1,myca2"
+    trust_certs = "s3://certbucket/ca1.pem,s3://certbucket/ca2.pem"
+    truststore_path = "tests/tmp/truststore.jks"
+    truststore_password = "password1"
+    certs = [
+        {"alias": "myca1", "cert": "s3://certbucket/ca1.pem"},
+        {"alias": "myca2", "cert": "s3://certbucket/ca2.pem"},
+    ]
+
+    pkey = OpenSSL.crypto.PKey()
+    pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
+    priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
+    trusted_cert_pem = generate_self_signed_cert(pkey)
+
+    get_object_params = {"Bucket": "certbucket", "Key": ANY}
+    get_object_response = {"Body": trusted_cert_pem}
+    s3 = botocore.session.get_session().create_client("s3")
+    with Stubber(s3) as stubber:
+        stubber.add_response("get_object", get_object_response, get_object_params)
+        stubber.add_response("get_object", get_object_response, get_object_params)
+        stubber.activate()
+        certgen.generate_truststore(s3, truststore_path, truststore_password, certs)
+        ts = jks.KeyStore.load(truststore_path, truststore_password)
+        assert len(ts.certs) == 2

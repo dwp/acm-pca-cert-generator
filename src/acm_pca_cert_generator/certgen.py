@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import sys
+from urlparse import urlparse
 
 
 logger = logging.getLogger("certgen")
@@ -367,7 +368,28 @@ def generate_keystore(
     keystore.save(keystore_path, keystore_password)
 
 
-def generate_truststore(truststore_path, truststore_password, certs):
+def parse_s3_url(url):
+    """Extract the S3 bucket name and key from a given S3 URL.
+
+    Args:
+        url (str): The S3 URL to parse
+
+    Returns:
+        dict: A {"bucket": "string", "key": "string"} dict representing the
+              S3 object identified by the given URL
+
+    """
+    parsed_url = urlparse(url)
+    if parsed_url.scheme != "s3":
+        raise ValueError("S3 URLs must start with 's3://'")
+
+    bucket = parsed_url.netloc.split(".")[0]
+    key = parsed_url.path.lstrip("/")
+
+    return {"bucket": bucket, "key": key}
+
+
+def generate_truststore(s3_client, truststore_path, truststore_password, certs):
     """Generate a Java TrustStore.
 
     Args:
@@ -380,15 +402,25 @@ def generate_truststore(truststore_path, truststore_password, certs):
     """
     logger.info("Generating Java TrustStore")
     trusted_certs = []
-    for alias, cert in certs.items():
-        with open(cert) as f:
-            pem_cert = OpenSSL.crypto.load_certificate(
-                OpenSSL.crypto.FILETYPE_PEM, f.read()
-            )
-            asn_cert = OpenSSL.crypto.dump_certificate(
-                OpenSSL.crypto.FILETYPE_ASN1, pem_cert
-            )
-            trusted_certs.append(jks.TrustedCertEntry.new(alias, asn_cert))
+    for cert_entry in certs:
+        alias = cert_entry["alias"]
+        cert = parse_s3_url(cert_entry["cert"])
+        pem_cert = s3_client.get_object(Bucket=cert["bucket"], Key=cert["key"])
+        x509_cert = OpenSSL.crypto.load_certificate(
+            OpenSSL.crypto.FILETYPE_PEM, pem_cert["Body"]
+        )
+        asn_cert = OpenSSL.crypto.dump_certificate(
+            OpenSSL.crypto.FILETYPE_ASN1, x509_cert
+        )
+        trusted_certs.append(jks.TrustedCertEntry.new(alias, asn_cert))
+
+    try:
+        newdir = os.path.dirname(truststore_path)
+        os.makedirs(newdir)
+    except OSError:
+        # Raise only if the directory doesn't already exist
+        if not os.path.isdir(newdir):
+            raise
     keystore = jks.KeyStore.new("jks", trusted_certs)
     keystore.save(truststore_path, truststore_password)
 
@@ -447,9 +479,9 @@ def _main(args):
 
     csr = generate_csr(key, args.key_digest_algorithm, subject_details)
 
-    client = boto3.client("acm-pca")
+    acmpca_client = boto3.client("acm-pca")
     cert = sign_cert(
-        client, args.ca_arn, csr, args.signing_algorithm, args.validity_period
+        acmpca_client, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
     generate_keystore(
         args.keystore_path,
@@ -463,7 +495,11 @@ def _main(args):
     trusted_certs = parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
-    generate_truststore(args.truststore_path, args.truststore_password, trusted_certs)
+
+    s3_client = boto3.client("s3")
+    generate_truststore(
+        s3_client, args.truststore_path, args.truststore_password, trusted_certs
+    )
 
 
 def main():
