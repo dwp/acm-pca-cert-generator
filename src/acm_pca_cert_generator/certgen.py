@@ -407,9 +407,17 @@ def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
                        containing a mapping of alias name to certifificate path
                        for trusted certificates
 
+    Raises:
+        ValueError: If the number of trusted_cert_aliases and trusted_certs don't match
+
     """
     aliases = trusted_cert_aliases.split(",")
     cert_paths = trusted_certs.split(",")
+    if len(aliases) != len(cert_paths):
+        raise ValueError(
+            "The number of trusted certificate aliases ({}) and trusted "
+            "certificates ({}) don't match".format(len(aliases), len(cert_paths))
+        )
     certs = []
     i = 0
     for alias in aliases:

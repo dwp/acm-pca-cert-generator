@@ -166,3 +166,21 @@ def test_generate_keystore():
 
     ks = jks.KeyStore.load(keystore_path, keystore_password)
     assert len(ks.private_keys.items()) == 1
+
+
+def test_parse_trusted_cert_arg():
+    trust_aliases = "myca1,myca2"
+    trust_certs = "s3://certbucket/ca1.pem,s3://certbucket/ca2.pem"
+    certs = certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
+    assert len(certs) == 2
+    assert certs[0]["alias"] == "myca1"
+    assert certs[0]["cert"] == "s3://certbucket/ca1.pem"
+    assert certs[1]["alias"] == "myca2"
+    assert certs[1]["cert"] == "s3://certbucket/ca2.pem"
+
+
+def test_parse_trusted_cert_arg_mismatched_lengths():
+    trust_aliases = "myca1,myca2"
+    trust_certs = "s3://certbucket"
+    with pytest.raises(ValueError):
+        certs = certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
