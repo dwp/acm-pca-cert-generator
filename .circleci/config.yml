@@ -14,13 +14,13 @@ jobs:
     - run:
         name: create dist package
         command: |
+          pip install bump2version
           set +o pipefail
-          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name'
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-          VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-          VERSION_NUMBER=$(echo $VERSION | sed 's/^v\(.*\)$/\1/')
-          sed -i -e "s/version=\"0.0.0\"/$VERSION_NUMBER/" setup.py
+          sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\" setup.py
+          bump2version minor --current-version $LATEST_VERSION
           python setup.py sdist --dist-dir artifacts
 
     - persist_to_workspace:
@@ -38,11 +38,11 @@ jobs:
         command: |
           set -u
           set +o pipefail
-          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name'
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-          VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-          echo "ghr -t GITHUB_TOKEN -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/"
+          sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\" setup.py
+          VERSION=$(bump2version minor --current-version $LATEST_VERSION --list | grep new_version | cut -f2 -d=)
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 workflows:
   version: 2
