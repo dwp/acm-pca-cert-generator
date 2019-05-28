@@ -72,6 +72,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./artifacts
+      - run: apk add --update py-pip
       - run: *bumpversion
       - run:
           name: Create GitHub release
