@@ -72,6 +72,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./artifacts
+      - checkout
       - run: apk add --update py-pip
       - run: *bumpversion
       - run:
