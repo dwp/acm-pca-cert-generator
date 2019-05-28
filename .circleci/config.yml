@@ -14,6 +14,7 @@ jobs:
     - run:
         name: create dist package
         command: |
+          PATH=$PATH:~/.local/bin
           pip install --user bump2version tox
           set +o pipefail
           LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name')
@@ -37,6 +38,7 @@ jobs:
     - run:
         name: "Publish Release on GitHub"
         command: |
+          PATH=$PATH:~/.local/bin
           pip install --user bump2version
           set -u
           set +o pipefail
