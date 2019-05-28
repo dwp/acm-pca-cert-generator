@@ -36,7 +36,7 @@ jobs:
       - run: *configureAWS
       - run:
           name: Test Python-2.7
-          command: AWS_DEFAULT_REGION=eu-west-2 ~/.local/bin/tox -e py27
+          command: ~/.local/bin/tox -e py27
 
   test_3.7:
     working_directory: ~/repo
@@ -48,7 +48,7 @@ jobs:
       - run: *configureAWS
       - run:
           name: Test Python-3.7
-          command: AWS_DEFAULT_REGION=eu-west-2 ~/.local/bin/tox -e py37
+          command: ~/.local/bin/tox -e py37
 
   build:
     working_directory: ~/repo
