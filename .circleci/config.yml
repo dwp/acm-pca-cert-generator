@@ -19,7 +19,7 @@ jobs:
           LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name')
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-          sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"" setup.py
+          sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"/" setup.py
           bump2version minor --current-version $LATEST_VERSION
           tox
           python setup.py sdist --dist-dir artifacts
@@ -43,7 +43,7 @@ jobs:
           LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name')
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-          sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"" setup.py
+          sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"/" setup.py
           VERSION=$(bump2version minor --current-version $LATEST_VERSION --list | grep new_version | cut -f2 -d=)
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 workflows:
