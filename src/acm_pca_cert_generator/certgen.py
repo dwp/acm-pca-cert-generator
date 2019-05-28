@@ -412,7 +412,7 @@ def generate_truststore(s3_client, truststore_path, truststore_password, certs):
         cert = parse_s3_url(cert_entry["cert"])
         pem_cert = s3_client.get_object(Bucket=cert["bucket"], Key=cert["key"])
         x509_cert = OpenSSL.crypto.load_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, pem_cert["Body"]
+            OpenSSL.crypto.FILETYPE_PEM, pem_cert["Body"].read().decode("utf-8")
         )
         asn_cert = OpenSSL.crypto.dump_certificate(
             OpenSSL.crypto.FILETYPE_ASN1, x509_cert
