@@ -22,7 +22,7 @@ configureAWS: &configureAWS
     mkdir ~/.aws
     cat >> ~/.aws/config << EOF
     [default]
-    region = "eu-west-2"
+    region = eu-west-2
     EOF
 
 jobs:
@@ -48,7 +48,7 @@ jobs:
       - run: *configureAWS
       - run:
           name: Test Python-3.7
-          command: AWS_DEFAULT_REGION=eu-west-2 ~/.local/bin/tox -e py27
+          command: AWS_DEFAULT_REGION=eu-west-2 ~/.local/bin/tox -e py37
 
   build:
     working_directory: ~/repo
