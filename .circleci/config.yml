@@ -59,12 +59,15 @@ jobs:
       - run: *bumpversion
       - run:
           name: Create dist package
-          command: python setup.py sdist --dist-dir artifacts
+          command: |
+            python setup.py sdist --dist-dir artifacts
+            echo "${VERSION}" > artifacts/VERSION
 
       - persist_to_workspace:
           root: artifacts
           paths:
             - acm_pca_cert_generator-*.tar.gz
+            - VERSION
 
   publish-github-release:
     docker:
@@ -72,11 +75,11 @@ jobs:
     steps:
       - attach_workspace:
           at: ./artifacts
-      - run: apk add --update py-pip
-      - run: *bumpversion
       - run:
           name: Create GitHub release
-          command: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
+          command: |
+            VERSION=$(cat ./artifacts/VERSION)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
