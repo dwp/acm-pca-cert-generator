@@ -36,7 +36,8 @@ def test_check_validity_period_invalid():
 
 
 def test_generate_private_key():
-    pkey = certgen.generate_private_key("RSA", 2048)
+    key = certgen.generate_private_key("RSA", 2048)
+    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
     assert pkey.type() == OpenSSL.crypto.TYPE_RSA
     assert pkey.bits() == 2048
 
@@ -63,8 +64,9 @@ valid_subject_details = {
 
 
 def test_generate_csr():
-    pkey = certgen.generate_private_key("RSA", 2048)
-    csr = certgen.generate_csr(pkey, "sha256", valid_subject_details)
+    key = certgen.generate_private_key("RSA", 2048)
+    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    csr = certgen.generate_csr(key, "sha256", valid_subject_details)
     x509req = OpenSSL.crypto.load_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
     name = x509req.get_subject().get_components()
 
@@ -87,8 +89,9 @@ def test_sign_cert():
     stub_cert_arn = "{}/certificate/286535153982981100925020015808220737245".format(
         ca_arn
     )
-    pkey = certgen.generate_private_key("RSA", 2048)
-    csr = certgen.generate_csr(pkey, "sha256", valid_subject_details)
+    key = certgen.generate_private_key("RSA", 2048)
+    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    csr = certgen.generate_csr(key, "sha256", valid_subject_details)
     signing_algo = "SHA384WITHRSA"
     validity = certgen.create_validity_dict("1d")
 
@@ -211,3 +214,64 @@ def test_generate_truststore():
         certgen.generate_truststore(s3, truststore_path, truststore_password, certs)
         ts = jks.KeyStore.load(truststore_path, truststore_password)
         assert len(ts.certs) == 2
+
+
+def test_end_to_end():
+    key = certgen.generate_private_key("RSA", 2048)
+    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+
+    csr = certgen.generate_csr(key, "sha256", valid_subject_details)
+    x509req = OpenSSL.crypto.load_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
+
+    cert = OpenSSL.crypto.X509()
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(5 * 365 * 24 * 60 * 60)
+    cert.set_issuer(x509req.get_subject())
+    cert.set_subject(x509req.get_subject())
+    cert.set_pubkey(x509req.get_pubkey())
+    cert.sign(pkey, "sha256")
+    signed_cert = str(
+        OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+    )
+
+    ca_arn = "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/506a130d-8519-45dc-903d-2a30709d6a33"
+    stub_cert_arn = "{}/certificate/286535153982981100925020015808220737245".format(
+        ca_arn
+    )
+
+    signing_algo = "SHA384WITHRSA"
+    validity = certgen.create_validity_dict("1d")
+
+    acmpca = botocore.session.get_session().create_client("acm-pca")
+    stubber = Stubber(acmpca)
+
+    issue_cert_params = {
+        "CertificateAuthorityArn": ca_arn,
+        "Csr": csr,
+        "SigningAlgorithm": signing_algo,
+        "Validity": validity,
+    }
+
+    issue_cert_response = {"CertificateArn": stub_cert_arn}
+
+    get_cert_params = {
+        "CertificateArn": stub_cert_arn,
+        "CertificateAuthorityArn": ca_arn,
+    }
+
+    get_cert_response = {"Certificate": signed_cert, "CertificateChain": signed_cert}
+
+    with Stubber(acmpca) as stubber:
+        stubber.add_response(
+            "issue_certificate", issue_cert_response, issue_cert_params
+        )
+
+        # boto3 waiters check HTTP status codes for success or failure but
+        # botocore stubbers don't issue HTTP calls. The following mocks the
+        # success of the waiter.wait() call by setting a client "error" up with
+        # a success return code.
+        stubber.add_client_error("get_certificate", http_status_code=200)
+        stubber.add_response("get_certificate", get_cert_response, get_cert_params)
+        stubber.activate()
+        cert_chain = certgen.sign_cert(acmpca, ca_arn, csr, "SHA384WITHRSA", "1d")
+        assert cert_chain == get_cert_response["CertificateChain"]

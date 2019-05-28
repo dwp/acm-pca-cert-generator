@@ -232,7 +232,7 @@ def generate_private_key(key_type, key_bits):
         key_bits (int): The length of the key
 
     Returns:
-        OpenSSL.Crypto.PKey: The OpenSSL private key
+        bytes: The PEM-encoded private key
 
     """
     logger.info("Generating private key")
@@ -246,21 +246,21 @@ def generate_private_key(key_type, key_bits):
             "Invalid value for key_type. Only 'RSA' and 'DSA' are supported."
         )
     key.generate_key(openssl_key_type, key_bits)
-    return key
+    return OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
 
 
-def generate_csr(pkey, digest, subject_details):
+def generate_csr(key, digest, subject_details):
     """Generate a certificate signing request.
 
     Args:
-        pkey (OpenSSL.crypto.PKey): The key pair to sign the CSR with
+        key (bytes): The PEM-encoded private key to sign the CSR with
         digest (str): The name of the message digest to use for the signature
         subject_details (dict): A dict containing all of the certificate subject's
                                 details. Must contain keys "C", ST", "L", "O", "OU",
                                 "CN", "emailAddress"
 
     Return:
-        str: The PEM-encoded CSR
+        bytes: The PEM-encoded CSR
 
     Raises:
         KeyError: If subject_details doesn't contain all of the required keys
@@ -274,6 +274,7 @@ def generate_csr(pkey, digest, subject_details):
     for name_part in subject_name_parts:
         setattr(subject, name_part, subject_details[name_part])
 
+    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
     csr.set_pubkey(pkey)
     csr.sign(pkey, digest)
     return OpenSSL.crypto.dump_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
