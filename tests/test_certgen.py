@@ -204,15 +204,11 @@ def test_generate_truststore():
     pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
     priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
     trusted_cert_pem = generate_self_signed_cert(pkey)
-    # Convert bytes to BytesIO so that we can read() it
-    trusted_cert_body = io.BytesIO(trusted_cert_pem)
-
     get_object_params = {"Bucket": "certbucket", "Key": ANY}
-    get_object_response = {"Body": trusted_cert_body}
     s3 = botocore.session.get_session().create_client("s3")
     with Stubber(s3) as stubber:
-        stubber.add_response("get_object", get_object_response, get_object_params)
-        stubber.add_response("get_object", get_object_response, get_object_params)
+        stubber.add_response("get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params)
+        stubber.add_response("get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params)
         stubber.activate()
         certgen.generate_truststore(s3, truststore_path, truststore_password, certs)
         ts = jks.KeyStore.load(truststore_path, truststore_password)
