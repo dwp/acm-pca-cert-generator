@@ -20,9 +20,7 @@ jobs:
           LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name // empty')
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-          echo "LATEST_VERSION=$LATEST_VERSION"
           sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"/" setup.py
-          cat setup.py
           bump2version minor --current-version $LATEST_VERSION
           tox
           python setup.py sdist --dist-dir artifacts
