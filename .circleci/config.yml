@@ -16,7 +16,7 @@ jobs:
         command: |
           pip install --user bump2version tox
           set +o pipefail
-          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name'
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name')
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
           sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"" setup.py
@@ -40,7 +40,7 @@ jobs:
           pip install --user bump2version
           set -u
           set +o pipefail
-          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name'
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name')
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
           sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"" setup.py
