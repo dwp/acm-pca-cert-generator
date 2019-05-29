@@ -2,98 +2,93 @@
 #
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
-version: 2
+version: 2.1
 
-bumpversion: &bumpversion
-  name: bump package version
-  command: |
-    PATH=$PATH:~/.local/bin
-    pip install --user bump2version tox
-    set +o pipefail
-    LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name // empty')
-    set -o pipefail
-    [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-    sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"/" setup.py
-    bump2version minor --current-version $LATEST_VERSION
-
-configureAWS: &configureAWS
-  name: Configure AWS
-  command: |
-    mkdir ~/.aws
-    cat >> ~/.aws/config << EOF
-    [default]
-    region = eu-west-2
-    EOF
-
+commands:
+  test:
+    parameters:
+      toxenv:
+        type: string
+    steps:
+    - run:
+        name: Test
+        command: |
+            PATH=$PATH:~/.local/bin
+            pip install --user tox
+            AWS_DEFAULT_REGION=eu-west-2 ~/.local/bin/tox -e << parameters.toxenv >>
 jobs:
-  test_2.7:
+  test_27:
     working_directory: ~/repo
     docker:
-      - image: circleci/python:2.7
+    - image: circleci/python:2.7
     steps:
-      - checkout
-      - run: *bumpversion
-      - run: *configureAWS
-      - run:
-          name: Test Python-2.7
-          command: ~/.local/bin/tox -e py27
+    - checkout
+    - test:
+        toxenv: py27
 
-  test_3.7:
+  test_37:
     working_directory: ~/repo
     docker:
-      - image: circleci/python:3.7
+    - image: circleci/python:3.7
     steps:
-      - checkout
-      - run: *bumpversion
-      - run: *configureAWS
-      - run:
-          name: Test Python-3.7
-          command: ~/.local/bin/tox -e py37
+    - checkout
+    - test:
+        toxenv: py37
 
   build:
     working_directory: ~/repo
     docker:
-      - image: circleci/python:3.7
+    - image: circleci/python:3.7
     steps:
-      - checkout
-      - run: *bumpversion
-      - run:
-          name: Create dist package
-          command: |
-            python setup.py sdist --dist-dir artifacts
-            echo "${VERSION}" > artifacts/VERSION
-
-      - persist_to_workspace:
-          root: artifacts
-          paths:
-            - acm_pca_cert_generator-*.tar.gz
-            - VERSION
+    - checkout
+    - run:
+        name: Bump release version
+        command: |
+          PATH=$PATH:~/.local/bin
+          pip install --user bump2version
+          set +o pipefail
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | jq -r '.tag_name // empty')
+          set -o pipefail
+          [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+          sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"/" setup.py
+          bump2version minor --current-version $LATEST_VERSION
+          mkdir -p artifacts
+          echo "${VERSION}" > artifacts/VERSION
+    - run:
+        name: Create dist package
+        command: |
+          python setup.py sdist --dist-dir artifacts
+    - persist_to_workspace:
+        root: artifacts
+        paths:
+        - acm_pca_cert_generator-*.tar.gz
+        - VERSION
 
   publish-github-release:
     docker:
-      - image: cibuilds/github:0.10
+    - image: cibuilds/github:0.10
     steps:
-      - attach_workspace:
-          at: ./artifacts
-      - run:
-          name: Create GitHub release
-          command: |
-            VERSION=$(cat ./artifacts/VERSION)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
+    - attach_workspace:
+        at: ./artifacts
+    - run:
+        name: Create GitHub release
+        command: |
+          VERSION=$(cat ./artifacts/VERSION)
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - test_2.7
-      - test_3.7
-      - build:
-          requires:
-            - test_2.7
-            - test_3.7
-      - publish-github-release:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+    - test_27
+    - test_37
+    - build:
+        requires:
+        - test_27
+        - test_37
+    - publish-github-release:
+        requires:
+        - build
+        filters:
+          branches:
+            only: master
