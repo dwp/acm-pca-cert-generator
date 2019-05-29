@@ -9,6 +9,17 @@ held on S3.
 
 Note that if you only want to dev/test locally, you don't need to run this.
 
+# Pre-Requisites:
+
+The AWS services that call this script need the following permissions:
+
+* `acm-pca:IssueCertificate` on the ACM PCA specified in the `--ca-arn` argument
+  - e.g. `arn:aws:acm-pca:AWS_Region:AWS_Account:certificate-authority/*`
+* `acm-pca:GetCertficate` on the ACM PCA specified in the `--ca-arn` argument
+  - e.g. `arn:aws:acm-pca:AWS_Region:AWS_Account:certificate-authority/*`
+* `s3:GetObject` on all buckets specified in the `--truststore-certs` argument
+  - e.g. `arn:aws:s3:::examplebucket/*`
+
 # Running
 
 The installation command above will place an `acm-pca-cert-generator` command in
