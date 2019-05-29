@@ -52,7 +52,10 @@ jobs:
           set -o pipefail
           [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
           sed -i -e "s/version=\"0.0.0\"/version=\"$LATEST_VERSION\"/" setup.py
-          VERSION=$(bump2version minor --current-version $LATEST_VERSION --list | grep current_version | cut -f2 -d=)
+          VERSION=$(bump2version minor --current-version $LATEST_VERSION --list | grep current_version)
+          echo "VERSION after grep = ${VERSION}"
+          VERSION=$(echo $VERSION | cut -f2 -d=)
+          echo "VERSION after cut = ${VERSION}"
           mkdir -p artifacts
           echo "${VERSION}" > artifacts/VERSION
     - run:
