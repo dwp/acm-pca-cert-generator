@@ -71,6 +71,28 @@ def check_validity_period(value):
     return value
 
 
+def check_subject_cn(value):
+    """Check that either the Subject CN was given, or HOSTNAME is set in the environment.
+
+    Args:
+        value (str): The command line argument provided by the user
+
+    Returns:
+        str: The given Subject CN, or HOSTNAME
+
+    Raises:
+        configargpase.ArgumentTypeError: If neither the Subject CN or HOSTNAME is present.
+
+    """
+    if not value and "HOSTNAME" not in os.environ:
+        raise configargparse.ArgumentTypeError(
+            "You must provide either --subject-cn or the HOSTNAME environment variable"
+        )
+    if not value:
+        value = os.environ["HOSTNAME"]
+    return value
+
+
 def parse_args(args):
     """Parse the supplied command line arguments.
 
@@ -132,9 +154,10 @@ def parse_args(args):
     )
     p.add(
         "--subject-cn",
-        required=True,
+        type=check_subject_cn,
+        required=False,
         env_var="CERTGEN_SUBJECT_CN",
-        help="Certificate subject common name",
+        help="Certificate subject common name (defaults to $HOSTNAME)",
     )
     p.add(
         "--subject-emailaddress",

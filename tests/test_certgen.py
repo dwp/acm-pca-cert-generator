@@ -5,6 +5,7 @@ import configargparse
 import io
 import jks
 import logging
+import os
 import pytest
 from acm_pca_cert_generator import certgen
 from botocore.stub import Stubber, ANY
@@ -34,6 +35,23 @@ def test_check_validity_period_valid():
 def test_check_validity_period_invalid():
     with pytest.raises(configargparse.ArgumentTypeError):
         certgen.check_validity_period("52w")
+
+
+def test_check_subject_cn_not_found():
+    # Tox won't pass HOSTNAME through, so this tests for the case where both the
+    # arg and environment variable are missing
+    with pytest.raises(configargparse.ArgumentTypeError):
+        certgen.check_subject_cn(None)
+
+
+def test_check_subject_cn_blank_cn():
+    with pytest.raises(configargparse.ArgumentTypeError):
+        certgen.check_subject_cn("")
+
+
+def test_check_subject_cn_hostname_available():
+    os.environ["HOSTNAME"] = "myfqdn.example.com"
+    assert certgen.check_subject_cn(None) == "myfqdn.example.com"
 
 
 def test_generate_private_key():
@@ -207,8 +225,12 @@ def test_generate_truststore():
     get_object_params = {"Bucket": "certbucket", "Key": ANY}
     s3 = botocore.session.get_session().create_client("s3")
     with Stubber(s3) as stubber:
-        stubber.add_response("get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params)
-        stubber.add_response("get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params)
+        stubber.add_response(
+            "get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params
+        )
+        stubber.add_response(
+            "get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params
+        )
         stubber.activate()
         certgen.generate_truststore(s3, truststore_path, truststore_password, certs)
         ts = jks.KeyStore.load(truststore_path, truststore_password)

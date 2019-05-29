@@ -82,10 +82,6 @@ def test_parse_args_missing_subject_o():
     missing_arg_test(["--subject-o", "DWP"])
 
 
-def test_parse_args_missing_subject_cn():
-    missing_arg_test(["--subject-cn", "myfqdn.example.com"])
-
-
 def test_parse_args_missing_subject_emailaddress():
     missing_arg_test(["--subject-emailaddress", "joebloggs@example.com"])
 
