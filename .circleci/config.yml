@@ -44,6 +44,7 @@ jobs:
     - run:
         name: Bump release version
         command: |
+          set -x
           PATH=$PATH:~/.local/bin
           pip install --user bump2version
           set +o pipefail
