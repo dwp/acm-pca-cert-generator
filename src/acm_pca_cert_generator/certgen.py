@@ -525,7 +525,8 @@ def _main(args):
     )
 
     # When we know whether or not to add the ACM chain, we'd do something like this
-    # trusted_certs.add ( {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
+    # trusted_certs.add (
+    #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
 
     s3_client = boto3.client("s3")
     generate_truststore(
