@@ -336,7 +336,7 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
         validity_period (str): How long the signed certificate should be valid for
 
     Returns:
-        str: The base64 PEM-encoded certificate chain of the signed CSR
+        str: The base64 PEM-encoded certificate and certificate chain of the signed CSR
 
     """
     logger.info("Requesting cert to be signed by ACM PCA")
@@ -354,7 +354,7 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
     logger.info("Retrieving signed cert from ACM PCA")
     return acmpca_client.get_certificate(
         CertificateAuthorityArn=ca_arn, CertificateArn=cert_arn
-    )["CertificateChain"]
+    )
 
 
 def generate_keystore(
@@ -508,14 +508,14 @@ def _main(args):
     csr = generate_csr(key, args.key_digest_algorithm, subject_details)
 
     acmpca_client = boto3.client("acm-pca")
-    cert = sign_cert(
+    cert_and_chain = sign_cert(
         acmpca_client, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
     generate_keystore(
         args.keystore_path,
         args.keystore_password,
         key,
-        cert,
+        cert_and_chain["Certificate"],
         args.private_key_alias,
         args.private_key_password,
     )
@@ -523,6 +523,9 @@ def _main(args):
     trusted_certs = parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
+
+    # When we know whether or not to add the ACM chain, we'd do something like this
+    # trusted_certs.add ( {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
 
     s3_client = boto3.client("s3")
     generate_truststore(
