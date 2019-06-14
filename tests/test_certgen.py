@@ -149,7 +149,7 @@ def test_sign_cert():
         stubber.add_response("get_certificate", get_cert_response, get_cert_params)
         stubber.activate()
         cert_chain = certgen.sign_cert(acmpca, ca_arn, csr, "SHA384WITHRSA", "1d")
-        assert cert_chain == get_cert_response["CertificateChain"]
+        assert cert_chain == get_cert_response
 
 
 def generate_self_signed_cert(pkey):
@@ -295,4 +295,4 @@ def test_end_to_end():
         stubber.add_response("get_certificate", get_cert_response, get_cert_params)
         stubber.activate()
         cert_chain = certgen.sign_cert(acmpca, ca_arn, csr, "SHA384WITHRSA", "1d")
-        assert cert_chain == get_cert_response["CertificateChain"]
+        assert cert_chain == get_cert_response
