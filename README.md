@@ -92,6 +92,7 @@ optional arguments:
                         CERTGEN_VALIDITY_PERIOD]
   --keystore-path KEYSTORE_PATH
                         Filename of the keystore to save the signed keypair to
+                        Should be different to truststore-path
                         [env var: CERTGEN_KEYSTORE_PATH]
   --keystore-password KEYSTORE_PASSWORD
                         Password for the Java Keystore [env var:
@@ -104,6 +105,7 @@ optional arguments:
                         CERTGEN_PRIVATE_KEY_PASSWORD]
   --truststore-path TRUSTSTORE_PATH
                         Filename of the keystore to save trusted certificates
+                        Should be different to keystore-path
                         to [env var: CERTGEN_TRUSTSTORE_PATH]
   --truststore-password TRUSTSTORE_PASSWORD
                         Password for the Java TrustStore [env var:
@@ -136,7 +138,7 @@ acm-pca-cert-generator --key-type RSA --key-length 2048 --subject-c "GB" \
 --subject-ou "IT Department" --subject-cn "myfqdn.example.com" \
 --subject-emailaddress "me@example.com" \
 --ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/506a130d-8519-45dc-903d-2a30709d6a33" \
---signing-algorithm "SHA256WITHRSA" --validity-period=1d \
+--signing-algorithm "SHA384WITHRSA" --validity-period=1d \
 --keystore-path /tmp/keystore.jks --keystore-password P4ssw0rd1 \
 ---private-key-alias mykey --truststore-path /tmp/truststore.jks \
 --truststore-password P4ssw0rd2 --truststore-aliases ca1,ca2 \
