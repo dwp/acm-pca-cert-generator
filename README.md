@@ -140,7 +140,7 @@ acm-pca-cert-generator --key-type RSA --key-length 2048 --subject-c "GB" \
 --ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/506a130d-8519-45dc-903d-2a30709d6a33" \
 --signing-algorithm "SHA384WITHRSA" --validity-period=1d \
 --keystore-path /tmp/keystore.jks --keystore-password P4ssw0rd1 \
----private-key-alias mykey --truststore-path /tmp/truststore.jks \
+--private-key-alias mykey --truststore-path /tmp/truststore.jks \
 --truststore-password P4ssw0rd2 --truststore-aliases ca1,ca2 \
 --truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem
 ```
