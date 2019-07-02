@@ -300,7 +300,6 @@ def generate_csr(key, digest, subject_details):
     pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
     csr.set_pubkey(pkey)
     csr.sign(pkey, digest)
-    # Needs -ext EKU:true=clientAuth,serverAuth
     return OpenSSL.crypto.dump_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
 
 
