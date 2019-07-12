@@ -99,7 +99,7 @@ def test_parse_args_missing_signing_algorithm():
     missing_arg_test(["--signing-algorithm", "SHA384WITHRSA"])
 
 
-def test_parse_args_missing_key_type():
+def test_parse_args_missing_validity_period():
     missing_arg_test(["--validity-period", "1d"])
 
 

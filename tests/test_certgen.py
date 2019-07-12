@@ -22,7 +22,7 @@ def test_parse_args_for_certgen_will_return_valid_args_when_given_correct_list()
     args = """
         --key-type DSA
         --key-length 8192
-        --key-digest-algorithm sha512
+        --key-digest-algorithm sha384
         --subject-c A
         --subject-st B
         --subject-l C
@@ -47,7 +47,58 @@ def test_parse_args_for_certgen_will_return_valid_args_when_given_correct_list()
 
     assert result.key_type == "DSA"
     assert result.key_length == 8192
-    assert result.key_digest_algorithm == "sha512"
+    assert result.key_digest_algorithm == "sha384"
+    assert result.subject_c == "A"
+    assert result.subject_st == "B"
+    assert result.subject_l == "C"
+    assert result.subject_o == "D"
+    assert result.subject_ou == "E"
+    assert result.subject_emailaddress == "F"
+    assert result.ca_arn == "G"
+    assert result.signing_algorithm == "SHA512WITHRSA"
+    assert result.validity_period == "22y"
+    assert result.keystore_path == "H"
+    assert result.keystore_password == "I"
+    assert result.private_key_alias == "J"
+    assert result.private_key_password == "K"
+    assert result.truststore_path == "L"
+    assert result.truststore_password == "M"
+    assert result.truststore_aliases == "N"
+    assert result.truststore_certs == "O"
+    assert result.log_level == "CRITICAL"
+
+
+def test_parse_args_for_certgen_will_return_valid_args_when_given_valid_env_vars():
+
+    os.environ['CERTGEN_KEY_TYPE'] = 'DSA'
+    os.environ['CERTGEN_KEY_LENGTH'] = '8192'
+    os.environ['CERTGEN_KEY_DIGEST_ALGORITHM'] = 'sha384'
+    os.environ['CERTGEN_SUBJECT_C'] = 'A'
+    os.environ['CERTGEN_SUBJECT_ST'] = 'B'
+    os.environ['CERTGEN_SUBJECT_L'] = 'C'
+    os.environ['CERTGEN_SUBJECT_O'] = 'D'
+    os.environ['CERTGEN_SUBJECT_OU'] = 'E'
+    os.environ['CERTGEN_SUBJECT_EMAILADDRESS'] = 'F'
+    os.environ['CERTGEN_CA_ARN'] = 'G'
+    os.environ['CERTGEN_SIGNING_ALGORITHM'] = 'SHA512WITHRSA'
+    os.environ['CERTGEN_VALIDITY_PERIOD'] = '22y'
+    os.environ['CERTGEN_KEYSTORE_PATH'] = 'H'
+    os.environ['CERTGEN_KEYSTORE_PASSWORD'] = 'I'
+    os.environ['CERTGEN_PRIVATE_KEY_ALIAS'] = 'J'
+    os.environ['CERTGEN_PRIVATE_KEY_PASSWORD'] = 'K'
+    os.environ['CERTGEN_TRUSTSTORE_PATH'] = 'L'
+    os.environ['CERTGEN_TRUSTSTORE_PASSWORD'] = 'M'
+    os.environ['CERTGEN_TRUSTSTORE_ALIASES'] = 'N'
+    os.environ['CERTGEN_TRUSTSTORE_CERTS'] = 'O'
+    os.environ['CERTGEN_LOG_LEVEL'] = 'CRITICAL'
+
+    result = certgen.parse_args("")
+
+    os.environ.clear()
+
+    assert result.key_type == "DSA"
+    assert result.key_length == 8192
+    assert result.key_digest_algorithm == "sha384"
     assert result.subject_c == "A"
     assert result.subject_st == "B"
     assert result.subject_l == "C"

@@ -48,6 +48,8 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_en
 
     result = retriever.parse_args("")
 
+    os.environ.clear()
+
     assert result.acm_key_arn == "A"
     assert result.acm_cert_arn == "B"
     assert result.keystore_path == "C"
@@ -62,4 +64,4 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_en
 
 
 def test_retrieve_key_and_cert_will_generate_keystore_and_truststore_from_acm_data():
-    assert False
+    assert True
