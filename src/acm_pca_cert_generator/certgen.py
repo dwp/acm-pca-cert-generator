@@ -8,8 +8,7 @@ import logging
 import os
 import re
 import sys
-from acm_pca_cert_generator import logger_utils
-from acm_pca_cert_generator import truststore_utils
+from acm_common import logger_utils, truststore_utils
 
 try:
     from urllib.parse import urlparse
