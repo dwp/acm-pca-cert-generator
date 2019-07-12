@@ -4,11 +4,12 @@
 import OpenSSL
 import boto3
 import configargparse
-import jks
 import logging
 import os
 import re
 import sys
+from acm_pca_cert_generator import logger_utils
+from acm_pca_cert_generator import truststore_utils
 
 try:
     from urllib.parse import urlparse
@@ -357,45 +358,6 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
     )
 
 
-def generate_keystore(
-    keystore_path, keystore_password, priv_key, cert, alias, priv_key_password=None
-):
-    """Generate a Java KeyStore.
-
-    Args:
-        keystore_path (str): The path at which to save the keystore
-        keystore_password (str): The password to protect the keystore with
-        priv_key (str): The base64 PEM-encoded private key to store
-        cert (str): The base64 PEM-encoded certificate signed by ACM PCA
-        alias (str): The alias under which to store the key pair
-        priv_key_password (str): The password to protect the private key with
-
-    """
-    logger.info("Generating Java KeyStore")
-    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, priv_key)
-    dumped_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pkey)
-
-    x509_cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
-    dumped_cert = OpenSSL.crypto.dump_certificate(
-        OpenSSL.crypto.FILETYPE_ASN1, x509_cert
-    )
-
-    pke = jks.PrivateKeyEntry.new(alias, [dumped_cert], dumped_key, "rsa_raw")
-
-    if priv_key_password:
-        pke.encrypt(priv_key_password)
-
-    keystore = jks.KeyStore.new("jks", [pke])
-    try:
-        newdir = os.path.dirname(keystore_path)
-        os.makedirs(newdir)
-    except OSError:
-        # Raise only if the directory doesn't already exist
-        if not os.path.isdir(newdir):
-            raise
-    keystore.save(keystore_path, keystore_password)
-
-
 def parse_s3_url(url):
     """Extract the S3 bucket name and key from a given S3 URL.
 
@@ -415,42 +377,6 @@ def parse_s3_url(url):
     key = parsed_url.path.lstrip("/")
 
     return {"bucket": bucket, "key": key}
-
-
-def generate_truststore(s3_client, truststore_path, truststore_password, certs):
-    """Generate a Java TrustStore.
-
-    Args:
-        truststore_path (str): The path at which to save the truststore
-        truststore_password (str): The password to protect the truststore with
-        certs (list): A list of dicts containing aliases and certificate paths
-                      for SSL certs to add to the truststore, e.g.:
-                      [{"alias": "testcert", "cert": "/tmp/mycert.pem"}]
-
-    """
-    logger.info("Generating Java TrustStore")
-    trusted_certs = []
-    for cert_entry in certs:
-        alias = cert_entry["alias"]
-        cert = parse_s3_url(cert_entry["cert"])
-        pem_cert = s3_client.get_object(Bucket=cert["bucket"], Key=cert["key"])
-        x509_cert = OpenSSL.crypto.load_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, pem_cert["Body"].read().decode("utf-8")
-        )
-        asn_cert = OpenSSL.crypto.dump_certificate(
-            OpenSSL.crypto.FILETYPE_ASN1, x509_cert
-        )
-        trusted_certs.append(jks.TrustedCertEntry.new(alias, asn_cert))
-
-    try:
-        newdir = os.path.dirname(truststore_path)
-        os.makedirs(newdir)
-    except OSError:
-        # Raise only if the directory doesn't already exist
-        if not os.path.isdir(newdir):
-            raise
-    keystore = jks.KeyStore.new("jks", trusted_certs)
-    keystore.save(truststore_path, truststore_password)
 
 
 def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
@@ -487,16 +413,9 @@ def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
     return certs
 
 
-def _setup_logging(log_level):
-    level = logging.getLevelName(log_level)
-    logger.setLevel(level)
-    boto3.set_stream_logger("", level)
-    logger.info("Logging level set to {}".format(log_level))
-
-
 def _main(args):
     args = parse_args(args)
-    _setup_logging(args.log_level)
+    logger_utils.setup_logging(logger, args.log_level)
     key = generate_private_key(args.key_type, args.key_length)
 
     subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
@@ -511,7 +430,7 @@ def _main(args):
     cert_and_chain = sign_cert(
         acmpca_client, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
-    generate_keystore(
+    truststore_utils.generate_keystore(
         args.keystore_path,
         args.keystore_password,
         key,
@@ -529,7 +448,7 @@ def _main(args):
     #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
 
     s3_client = boto3.client("s3")
-    generate_truststore(
+    truststore_utils.generate_truststore(
         s3_client, args.truststore_path, args.truststore_password, trusted_certs
     )
 

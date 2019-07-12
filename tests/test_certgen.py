@@ -1,5 +1,4 @@
 import OpenSSL
-import boto3
 import botocore.session
 import configargparse
 import io
@@ -8,8 +7,8 @@ import logging
 import os
 import pytest
 from acm_pca_cert_generator import certgen
+from acm_pca_cert_generator import truststore_utils
 from botocore.stub import Stubber, ANY
-from collections import Counter
 
 
 def test_check_key_length_valid():
@@ -100,7 +99,7 @@ def test_generate_csr_invalid_subject_details():
     pkey = certgen.generate_private_key("RSA", 2048)
     invalid_subject_details.pop("emailAddress")
     with pytest.raises(KeyError):
-        csr = certgen.generate_csr(pkey, "sha256", invalid_subject_details)
+        certgen.generate_csr(pkey, "sha256", invalid_subject_details)
 
 
 def test_sign_cert():
@@ -109,13 +108,11 @@ def test_sign_cert():
         ca_arn
     )
     key = certgen.generate_private_key("RSA", 2048)
-    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
     csr = certgen.generate_csr(key, "sha256", valid_subject_details)
     signing_algo = "SHA384WITHRSA"
     validity = certgen.create_validity_dict("1d")
 
     acmpca = botocore.session.get_session().create_client("acm-pca")
-    stubber = Stubber(acmpca)
 
     issue_cert_params = {
         "CertificateAuthorityArn": ca_arn,
@@ -182,7 +179,7 @@ def test_generate_keystore():
     pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
     priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
     cert_pem = generate_self_signed_cert(pkey)
-    certgen.generate_keystore(
+    truststore_utils.generate_keystore(
         keystore_path, keystore_password, priv_key, cert_pem, "testalias"
     )
 
@@ -205,12 +202,10 @@ def test_parse_trusted_cert_arg_mismatched_lengths():
     trust_aliases = "myca1,myca2"
     trust_certs = "s3://certbucket"
     with pytest.raises(ValueError):
-        certs = certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
+        certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
 
 
 def test_generate_truststore():
-    trust_aliases = "myca1,myca2"
-    trust_certs = "s3://certbucket/ca1.pem,s3://certbucket/ca2.pem"
     truststore_path = "tests/tmp/truststore.jks"
     truststore_password = "password1"
     certs = [
@@ -220,7 +215,6 @@ def test_generate_truststore():
 
     pkey = OpenSSL.crypto.PKey()
     pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
-    priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
     trusted_cert_pem = generate_self_signed_cert(pkey)
     get_object_params = {"Bucket": "certbucket", "Key": ANY}
     s3 = botocore.session.get_session().create_client("s3")
@@ -232,7 +226,7 @@ def test_generate_truststore():
             "get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params
         )
         stubber.activate()
-        certgen.generate_truststore(s3, truststore_path, truststore_password, certs)
+        truststore_utils.generate_truststore(s3, truststore_path, truststore_password, certs)
         ts = jks.KeyStore.load(truststore_path, truststore_password)
         assert len(ts.certs) == 2
 
@@ -264,7 +258,6 @@ def test_end_to_end():
     validity = certgen.create_validity_dict("1d")
 
     acmpca = botocore.session.get_session().create_client("acm-pca")
-    stubber = Stubber(acmpca)
 
     issue_cert_params = {
         "CertificateAuthorityArn": ca_arn,
