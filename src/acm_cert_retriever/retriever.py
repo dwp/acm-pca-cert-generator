@@ -106,17 +106,18 @@ def retrieve_key_and_cert(args, acm_util, s3_util, truststore_util):
     Args:
         args (Object): The parsed command line arguments
         acm_util (Object): The boto3 utility to use
+        s3_util (Object): The boto3 utility to use
         truststore_util (Object): The utility package to pass the data to
 
     """
     key_data = acm_util.get_certificate(CertificateArn=args.acm_key_arn)
-    cert_and_chain = acm_util.get_certificate(CertificateArn=args.acm_cert_arn)
+    cert_and_chain_data = acm_util.get_certificate(CertificateArn=args.acm_cert_arn)
 
     truststore_util.generate_keystore(
         args.keystore_path,
         args.keystore_password,
-        key_data.data,
-        cert_and_chain.data,
+        key_data['Certificate'],
+        cert_and_chain_data['Certificate'],
         args.private_key_alias,
         args.private_key_password,
     )
@@ -127,7 +128,7 @@ def retrieve_key_and_cert(args, acm_util, s3_util, truststore_util):
 
     # When we know whether or not to add the ACM chain, we'd do something like this
     # trusted_certs.add (
-    #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
+    #   {"alias": "aws-cert", "cert": cert_and_chain_data["CertificateChain"] } )
 
     truststore_util.generate_truststore(
         s3_util, args.truststore_path, args.truststore_password, trusted_certs
