@@ -98,14 +98,21 @@ def parse_args(args):
     return p.parse_args(args)
 
 
-def _main(args):
-    args = parse_args(args)
-    logger_utils.setup_logging(logger, args.log_level)
+def retrieve_key_and_cert(args, acm_util, truststore_util):
+    """Download a key and certificate chain form ACM, and puts them in a Keystore.
 
-    key_data = acm_client.get_certificate(CertificateArn=args.acm_key_arn)
-    cert_and_chain = acm_client.get_certificate(CertificateArn=args.acm_cert_arn)
+    Also creates a Truststore with files from S3.
 
-    truststore_utils.generate_keystore(
+    Args:
+        args (Object): The parsed command line arguments
+        acm_util (Object): The boto3 utility to use
+        truststore_util (Object): The utility package to pass the data to
+
+    """
+    key_data = acm_util.get_certificate(CertificateArn=args.acm_key_arn)
+    cert_and_chain = acm_util.get_certificate(CertificateArn=args.acm_cert_arn)
+
+    truststore_util.generate_keystore(
         args.keystore_path,
         args.keystore_password,
         key_data.data,
@@ -114,7 +121,7 @@ def _main(args):
         args.private_key_password,
     )
 
-    trusted_certs = truststore_utils.parse_trusted_cert_arg(
+    trusted_certs = truststore_util.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
 
@@ -122,9 +129,15 @@ def _main(args):
     # trusted_certs.add (
     #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
 
-    truststore_utils.generate_truststore(
+    truststore_util.generate_truststore(
         s3_client, args.truststore_path, args.truststore_password, trusted_certs
     )
+
+
+def _main(args):
+    args = parse_args(args)
+    logger_utils.setup_logging(logger, args.log_level)
+    retrieve_key_and_cert(args, acm_client, truststore_utils)
 
 
 def main():

@@ -80,15 +80,15 @@ def test_generate_truststore():
         assert len(ts.certs) == 2
 
 
-def _generate_self_signed_cert(pkey):
+def _generate_self_signed_cert(private_key):
     # Generate CSR
     x509req = OpenSSL.crypto.X509Req()
     subject = x509req.get_subject()
     subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
     for name_part in subject_name_parts:
         setattr(subject, name_part, valid_subject_details[name_part])
-    x509req.set_pubkey(pkey)
-    x509req.sign(pkey, "sha256")
+    x509req.set_pubkey(private_key)
+    x509req.sign(private_key, "sha256")
 
     # Generate signed cert
     cert = OpenSSL.crypto.X509()
@@ -97,6 +97,6 @@ def _generate_self_signed_cert(pkey):
     cert.set_issuer(x509req.get_subject())
     cert.set_subject(x509req.get_subject())
     cert.set_pubkey(x509req.get_pubkey())
-    cert.sign(pkey, "sha256")
+    cert.sign(private_key, "sha256")
 
     return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)

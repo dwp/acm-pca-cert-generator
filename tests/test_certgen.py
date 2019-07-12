@@ -4,7 +4,7 @@ import configargparse
 import os
 import pytest
 from acm_pca_cert_generator import certgen
-from botocore.stub import Stubber, ANY
+from botocore.stub import Stubber
 
 
 valid_subject_details = {
@@ -16,6 +16,56 @@ valid_subject_details = {
     "CN": "myfqdn.example.com",
     "emailAddress": "joebloggs@example.com",
 }
+
+
+def test_parse_args_for_certgen_will_return_valid_args_when_given_correct_list():
+    args = """
+        --key-type DSA
+        --key-length 8192
+        --key-digest-algorithm sha512
+        --subject-c A
+        --subject-st B
+        --subject-l C
+        --subject-o D
+        --subject-ou E
+        --subject-emailaddress F
+        --ca-arn G
+        --signing-algorithm SHA512WITHRSA
+        --validity-period 22y
+        --keystore-path H
+        --keystore-password I
+        --private-key-alias J
+        --private-key-password K
+        --truststore-path L 
+        --truststore-password M
+        --truststore-aliases N
+        --truststore-certs O
+        --log-level CRITICAL
+    """
+
+    result = certgen.parse_args(args)
+
+    assert result.key_type == "DSA"
+    assert result.key_length == 8192
+    assert result.key_digest_algorithm == "sha512"
+    assert result.subject_c == "A"
+    assert result.subject_st == "B"
+    assert result.subject_l == "C"
+    assert result.subject_o == "D"
+    assert result.subject_ou == "E"
+    assert result.subject_emailaddress == "F"
+    assert result.ca_arn == "G"
+    assert result.signing_algorithm == "SHA512WITHRSA"
+    assert result.validity_period == "22y"
+    assert result.keystore_path == "H"
+    assert result.keystore_password == "I"
+    assert result.private_key_alias == "J"
+    assert result.private_key_password == "K"
+    assert result.truststore_path == "L"
+    assert result.truststore_password == "M"
+    assert result.truststore_aliases == "N"
+    assert result.truststore_certs == "O"
+    assert result.log_level == "CRITICAL"
 
 
 def test_check_key_length_valid():

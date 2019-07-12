@@ -8,8 +8,8 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="acm_cert_helper",
     version="0.0.1",
-    author="Matt Burgess",
-    author_email="matthewburgess@digital.uc.dwp.gov.uk",
+    author="DWP DataWorks",
+    author_email="dataworks@digital.uc.dwp.gov.uk",
     description="Creates a local Keystore and Truststore by generating a cert "
                 "using ACM PCA or fetching a key and cert using ACM.",
     long_description=long_description,
@@ -23,7 +23,7 @@ setuptools.setup(
     },
     package_dir={"": "src"},
     packages=setuptools.find_packages("src"),
-    install_requires=["ConfigArgParse", "boto3", "pyjks", "pyopenssl"],
+    install_requires=["ConfigArgParse", "boto3", "pyjks", "pyopenssl", "tox"],
     classifiers=[
         "Programming Language :: Python :: 2",
         "License :: OSI Approved :: MIT License",
