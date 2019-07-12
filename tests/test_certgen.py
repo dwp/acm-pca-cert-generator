@@ -171,66 +171,6 @@ def generate_self_signed_cert(pkey):
     return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
 
 
-def test_generate_keystore():
-    certgen.logger.setLevel(logging.DEBUG)
-    keystore_path = "tests/tmp/keystore.jks"
-    keystore_password = "password1"
-    pkey = OpenSSL.crypto.PKey()
-    pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
-    priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
-    cert_pem = generate_self_signed_cert(pkey)
-    truststore_utils.generate_keystore(
-        keystore_path, keystore_password, priv_key, cert_pem, "testalias"
-    )
-
-    ks = jks.KeyStore.load(keystore_path, keystore_password)
-    assert len(ks.private_keys.items()) == 1
-
-
-def test_parse_trusted_cert_arg():
-    trust_aliases = "myca1,myca2"
-    trust_certs = "s3://certbucket/ca1.pem,s3://certbucket/ca2.pem"
-    certs = certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
-    assert len(certs) == 2
-    assert certs[0]["alias"] == "myca1"
-    assert certs[0]["cert"] == "s3://certbucket/ca1.pem"
-    assert certs[1]["alias"] == "myca2"
-    assert certs[1]["cert"] == "s3://certbucket/ca2.pem"
-
-
-def test_parse_trusted_cert_arg_mismatched_lengths():
-    trust_aliases = "myca1,myca2"
-    trust_certs = "s3://certbucket"
-    with pytest.raises(ValueError):
-        certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
-
-
-def test_generate_truststore():
-    truststore_path = "tests/tmp/truststore.jks"
-    truststore_password = "password1"
-    certs = [
-        {"alias": "myca1", "cert": "s3://certbucket/ca1.pem"},
-        {"alias": "myca2", "cert": "s3://certbucket/ca2.pem"},
-    ]
-
-    pkey = OpenSSL.crypto.PKey()
-    pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
-    trusted_cert_pem = generate_self_signed_cert(pkey)
-    get_object_params = {"Bucket": "certbucket", "Key": ANY}
-    s3 = botocore.session.get_session().create_client("s3")
-    with Stubber(s3) as stubber:
-        stubber.add_response(
-            "get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params
-        )
-        stubber.add_response(
-            "get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params
-        )
-        stubber.activate()
-        truststore_utils.generate_truststore(s3, truststore_path, truststore_password, certs)
-        ts = jks.KeyStore.load(truststore_path, truststore_password)
-        assert len(ts.certs) == 2
-
-
 def test_end_to_end():
     key = certgen.generate_private_key("RSA", 2048)
     pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)

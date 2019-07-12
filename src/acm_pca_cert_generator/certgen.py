@@ -102,25 +102,31 @@ def parse_args(args):
     """
     p = configargparse.ArgParser(
         default_config_files=[
-            "/etc/acm_pca_cert_generator/acm_pca_cert_generator.conf",
-            "~/.config/acm_pca_cert_generator/acm_pca_cert_generator.conf",
+            "/etc/acm_cert_helper/acm_pca_cert_generator.conf",
+            "~/.config/acm_cert_helper/acm_pca_cert_generator.conf",
         ]
     )
 
     p.add(
-        "--key-type", choices=["RSA", "DSA"], required=True, env_var="CERTGEN_KEY_TYPE"
+        "--key-type",
+        choices=["RSA", "DSA"],
+        required=True,
+        env_var="CERTGEN_KEY_TYPE",
+        help="The key type",
     )
     p.add(
         "--key-length",
         type=check_key_length,
         required=True,
         env_var="CERTGEN_KEY_LENGTH",
+        help="The key length in bits",
     )
     p.add(
         "--key-digest-algorithm",
         choices=["sha256", "sha384", "sha512"],
         default="sha384",
         env_var="CERTGEN_KEY_DIGEST",
+        help="The key digest algorithm",
     )
     p.add(
         "--subject-c",
@@ -165,8 +171,12 @@ def parse_args(args):
         env_var="CERTGEN_SUBJECT_EMAILADDRESS",
         help="Certificate subject email address",
     )
-
-    p.add("--ca-arn", required=True, env_var="CERTGEN_CA_ARN", help="ACM PCA ARN")
+    p.add(
+        "--ca-arn",
+        required=True,
+        env_var="CERTGEN_CA_ARN",
+        help="ACM PCA ARN"
+    )
     p.add(
         "--signing-algorithm",
         choices=[
@@ -242,6 +252,7 @@ def parse_args(args):
         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
         default="INFO",
         env_var="CERTGEN_LOG_LEVEL",
+        help="Logging level",
     )
 
     return p.parse_args(args)
@@ -378,40 +389,6 @@ def parse_s3_url(url):
     return {"bucket": bucket, "key": key}
 
 
-def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
-    """Split the CLI arguments for trusted cert aliases and paths.
-
-    Args:
-        trusted_cert_aliases (str): comma-separated list of certificate aliases
-                                    to add to the truststore
-        trusted_certs (str): comma-separated list of certificates (paths) to add
-                             to the truststore
-
-    Returns:
-        list of dicts: A list of {"alias": "string", "cert": "string"} dicts
-                       containing a mapping of alias name to certifificate path
-                       for trusted certificates
-
-    Raises:
-        ValueError: If the number of trusted_cert_aliases and trusted_certs don't match
-
-    """
-    aliases = trusted_cert_aliases.split(",")
-    cert_paths = trusted_certs.split(",")
-    if len(aliases) != len(cert_paths):
-        raise ValueError(
-            "The number of trusted certificate aliases ({}) and trusted "
-            "certificates ({}) don't match".format(len(aliases), len(cert_paths))
-        )
-    certs = []
-    i = 0
-    for alias in aliases:
-        cert = {"alias": alias, "cert": cert_paths[i]}
-        certs.append(cert)
-        i += 1
-    return certs
-
-
 def _main(args):
     args = parse_args(args)
     logger_utils.setup_logging(logger, args.log_level)
@@ -438,7 +415,7 @@ def _main(args):
         args.private_key_password,
     )
 
-    trusted_certs = parse_trusted_cert_arg(
+    trusted_certs = truststore_utils.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
 

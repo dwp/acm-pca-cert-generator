@@ -16,6 +16,40 @@ except ImportError:
 logger = logging.getLogger("truststore")
 
 
+def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
+    """Split the CLI arguments for trusted cert aliases and paths.
+
+    Args:
+        trusted_cert_aliases (str): comma-separated list of certificate aliases
+                                    to add to the truststore
+        trusted_certs (str): comma-separated list of certificates (paths) to add
+                             to the truststore
+
+    Returns:
+        list of dicts: A list of {"alias": "string", "cert": "string"} dicts
+                       containing a mapping of alias name to certifificate path
+                       for trusted certificates
+
+    Raises:
+        ValueError: If the number of trusted_cert_aliases and trusted_certs don't match
+
+    """
+    aliases = trusted_cert_aliases.split(",")
+    cert_paths = trusted_certs.split(",")
+    if len(aliases) != len(cert_paths):
+        raise ValueError(
+            "The number of trusted certificate aliases ({}) and trusted "
+            "certificates ({}) don't match".format(len(aliases), len(cert_paths))
+        )
+    certs = []
+    i = 0
+    for alias in aliases:
+        cert = {"alias": alias, "cert": cert_paths[i]}
+        certs.append(cert)
+        i += 1
+    return certs
+
+
 def generate_keystore(
     keystore_path, keystore_password, priv_key, cert, alias, priv_key_password=None
 ):

@@ -6,17 +6,18 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="acm_pca_cert_generator",
+    name="acm_cert_helper",
     version="0.0.1",
     author="Matt Burgess",
     author_email="matthewburgess@digital.uc.dwp.gov.uk",
-    description="Generate certs using ACM PCA",
+    description="Creates a local Keystore and Truststore by generating a cert using ACM PCA or fetching a key and cert using ACM.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/dwp/acm-pca-cert-generator",
+    url="https://github.com/dwp/acm-cert-helper",
     entry_points={
         "console_scripts": [
-            "acm-pca-cert-generator=acm_pca_cert_generator.certgen:main"
+            "acm-pca-cert-generator=acm_pca_cert_generator.certgen:main",
+            "acm-cert-retriever=acm_cert_retriever.retriever:main"
         ]
     },
     package_dir={"": "src"},
