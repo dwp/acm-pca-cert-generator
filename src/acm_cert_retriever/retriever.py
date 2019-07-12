@@ -1,20 +1,16 @@
 #!/usr/bin/env python
 
 """Certificate Retriever."""
-import OpenSSL
 import boto3
 import configargparse
 import logging
 import sys
 from acm_common import logger_utils, truststore_utils
 
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
-
 
 logger = logging.getLogger("retriever")
+acm_client = boto3.client("acm")
+s3_client = boto3.client("s3")
 
 
 def parse_args(args):
@@ -102,57 +98,12 @@ def parse_args(args):
     return p.parse_args(args)
 
 
-def parse_s3_url(url):
-    """Extract the S3 bucket name and key from a given S3 URL.
-
-    Args:
-        url (str): The S3 URL to parse
-
-    Returns:
-        dict: A {"bucket": "string", "key": "string"} dict representing the
-              S3 object identified by the given URL
-
-    """
-    parsed_url = urlparse(url)
-    if parsed_url.scheme != "s3":
-        raise ValueError("S3 URLs must start with 's3://'")
-
-    bucket = parsed_url.netloc.split(".")[0]
-    key = parsed_url.path.lstrip("/")
-
-    return {"bucket": bucket, "key": key}
-
-
-def retrieve_acm_data(acm_client, aws_acm_arn):
-    """Download the relevant information from ACM.
-
-    See https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/acm.html#ACM.Client.get_certificate
-
-    Args:
-        acm_client (Object): The ACM utility to call
-        aws_acm_arn (str): The ARN that identifies a stored credential in ACM.
-
-    Returns:
-        dict: A {"arn": "string", "data": "string"} dict representing the
-              S3 object identified by the given URL
-
-    """
-    return {
-        "arn": "your arn",
-        "data": {
-            'Certificate': "your cert",
-            'CertificateChain': "your cert chain"
-            }
-        }
-
-
 def _main(args):
     args = parse_args(args)
     logger_utils.setup_logging(logger, args.log_level)
 
-    acm_client = boto3.client("acm")
-    key_data = retrieve_acm_data(acm_client, args.acm_key_arn)
-    cert_and_chain = retrieve_acm_data(acm_client, args.acm_cert_arn)
+    key_data = acm_client.get_certificate(CertificateArn=args.acm_key_arn)
+    cert_and_chain = acm_client.get_certificate(CertificateArn=args.acm_cert_arn)
 
     truststore_utils.generate_keystore(
         args.keystore_path,
@@ -171,7 +122,6 @@ def _main(args):
     # trusted_certs.add (
     #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
 
-    s3_client = boto3.client("s3")
     truststore_utils.generate_truststore(
         s3_client, args.truststore_path, args.truststore_password, trusted_certs
     )

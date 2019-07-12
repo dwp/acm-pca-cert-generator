@@ -1,14 +1,21 @@
 import OpenSSL
 import botocore.session
 import configargparse
-import io
-import jks
-import logging
 import os
 import pytest
 from acm_pca_cert_generator import certgen
-from acm_common import truststore_utils
 from botocore.stub import Stubber, ANY
+
+
+valid_subject_details = {
+    "C": "GB",
+    "ST": "Yorkshire",
+    "L": "Leeds",
+    "O": "MyOrg",
+    "OU": "MyOU",
+    "CN": "myfqdn.example.com",
+    "emailAddress": "joebloggs@example.com",
+}
 
 
 def test_check_key_length_valid():
@@ -68,17 +75,6 @@ def test_generate_private_key_invalid_type():
 def test_generate_private_key_invalid_length():
     with pytest.raises(TypeError):
         certgen.generate_private_key("RSA", "notanint")
-
-
-valid_subject_details = {
-    "C": "GB",
-    "ST": "Yorkshire",
-    "L": "Leeds",
-    "O": "MyOrg",
-    "OU": "MyOU",
-    "CN": "myfqdn.example.com",
-    "emailAddress": "joebloggs@example.com",
-}
 
 
 def test_generate_csr():
@@ -147,28 +143,6 @@ def test_sign_cert():
         stubber.activate()
         cert_chain = certgen.sign_cert(acmpca, ca_arn, csr, "SHA384WITHRSA", "1d")
         assert cert_chain == get_cert_response
-
-
-def generate_self_signed_cert(pkey):
-    # Generate CSR
-    x509req = OpenSSL.crypto.X509Req()
-    subject = x509req.get_subject()
-    subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
-    for name_part in subject_name_parts:
-        setattr(subject, name_part, valid_subject_details[name_part])
-    x509req.set_pubkey(pkey)
-    x509req.sign(pkey, "sha256")
-
-    # Generate signed cert
-    cert = OpenSSL.crypto.X509()
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(5 * 365 * 24 * 60 * 60)
-    cert.set_issuer(x509req.get_subject())
-    cert.set_subject(x509req.get_subject())
-    cert.set_pubkey(x509req.get_pubkey())
-    cert.sign(pkey, "sha256")
-
-    return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
 
 
 def test_end_to_end():

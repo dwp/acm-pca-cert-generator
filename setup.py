@@ -10,7 +10,8 @@ setuptools.setup(
     version="0.0.1",
     author="Matt Burgess",
     author_email="matthewburgess@digital.uc.dwp.gov.uk",
-    description="Creates a local Keystore and Truststore by generating a cert using ACM PCA or fetching a key and cert using ACM.",
+    description="Creates a local Keystore and Truststore by generating a cert "
+                "using ACM PCA or fetching a key and cert using ACM.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dwp/acm-cert-helper",
