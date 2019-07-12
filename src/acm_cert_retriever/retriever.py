@@ -98,7 +98,7 @@ def parse_args(args):
     return p.parse_args(args)
 
 
-def retrieve_key_and_cert(args, acm_util, truststore_util):
+def retrieve_key_and_cert(args, acm_util, s3_util, truststore_util):
     """Download a key and certificate chain form ACM, and puts them in a Keystore.
 
     Also creates a Truststore with files from S3.
@@ -130,14 +130,14 @@ def retrieve_key_and_cert(args, acm_util, truststore_util):
     #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
 
     truststore_util.generate_truststore(
-        s3_client, args.truststore_path, args.truststore_password, trusted_certs
+        s3_util, args.truststore_path, args.truststore_password, trusted_certs
     )
 
 
 def _main(args):
     args = parse_args(args)
     logger_utils.setup_logging(logger, args.log_level)
-    retrieve_key_and_cert(args, acm_client, truststore_utils)
+    retrieve_key_and_cert(args, acm_client, s3_client, truststore_utils)
 
 
 def main():
