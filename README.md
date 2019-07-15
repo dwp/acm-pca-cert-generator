@@ -1,6 +1,7 @@
 # acm-cert-helper
 
-This contains two related utilities, both of which are detailed below.
+This contains two related utilities, both of which are detailed below, that work with ACM
+and ACM-PCA to make local Keystore and Truststore files.
 
 
 ## Testing locally
@@ -43,6 +44,7 @@ Note that if you only want to dev/test locally, you don't need to run this.
 `acm-cert-retriever` generates a Java KeyStore containing a keypair and cert it has fetched 
 from ACM, and a Java TrustStore containing one or more trusted certificates held on S3.
 
+
 ### Pre-Requisites:
 
 The AWS services that call this script need the following permissions:
@@ -51,11 +53,54 @@ The AWS services that call this script need the following permissions:
   - e.g. `arn:aws:acm:AWS_Region:AWS_Account:certificate/*`
 * `s3:GetObject` on all buckets specified in the `--truststore-certs` argument
   - e.g. `arn:aws:s3:::examplebucket/*`
-  
+
+
+### Running the debug sample
+
+You can try this set of commands locally. Us ethe arn of the cert thus generated:
+
+```
+$ aws acm request-certificate --domain-name www.dummy-test-example.com --idempotency-token 22563 --options CertificateTransparencyLoggingPreference=DISABLED --certificate-authority-arn arn:aws:acm-pca:eu-west-2:475593055014:certificate-authority/d5a9f633-ee2d-4d76-aadf-078c67452e47 --profile dataworks-development 
+
+{
+    "CertificateArn": "arn:aws:acm:eu-west-2:475593055014:certificate/eccdea0b-a61c-4fe2-a876-32a7de202fa5"
+}
+
+$ aws acm export-certificate --certificate-arn arn:aws:acm:eu-west-2:475593055014:certificate/eccdea0b-a61c-4fe2-a876-32a7de202fa5 --profile dataworks-development --output json --passphrase he11o-mumm3
+
+{
+    "PrivateKey": 
+      "-----BEGIN ENCRYPTED PRIVATE KEY----- 
+        ...PKCS8 Base64-encoded encrypted private key ...
+       -----END ENCRYPTED PRIVATE KEY-----",
+    "CertificateChain": 
+       "-----BEGIN CERTIFICATE-----   
+        ...Base64-encoded certificate...
+        -----END CERTIFICATE-----
+        -----BEGIN CERTIFICATE-----
+        ...Base64-encoded private key...
+        -----END CERTIFICATE-----",
+    "Certificate": 
+      "-----BEGIN CERTIFICATE----- 
+        ...Base64-encoded certificate...
+       -----END CERTIFICATE-----"
+}
+
+$ AWS_DEFAULT_PROFILE=dataworks-development \
+AWS_DEFAULT_REGION=eu-west-2 \
+python ./src/acm_cert_retriever/sample_retrieve.py \
+--acm-cert-arn arn:aws:acm:eu-west-2:475593055014:certificate/eccdea0b-a61c-4fe2-a876-32a7de202fa5 \
+--acm-cert-passphrase he110-mum3
+
+----
+cert, chain and encrypted key 
+----
+```
+
 
 ### Running
 
-The installation command above will place an `acm-pca-cert-generator` command in
+The installation command above will place an `acm--cert-retriever` command in
 your path. The script takes a number of command line arguments, the vast
 majority of which are mandatory. Alternatively, the same information can be
 specified using environment variables:

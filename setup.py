@@ -18,12 +18,13 @@ setuptools.setup(
     entry_points={
         "console_scripts": [
             "acm-pca-cert-generator=acm_pca_cert_generator.certgen:main",
-            "acm-cert-retriever=acm_cert_retriever.retriever:main"
+            "acm-cert-retriever=acm_cert_retriever.retriever:main",
+            "acm-cert-tester=acm_cert_retriever.sample_retrieve:main"
         ]
     },
     package_dir={"": "src"},
     packages=setuptools.find_packages("src"),
-    install_requires=["ConfigArgParse", "boto3", "pyjks", "pyopenssl"],
+    install_requires=["ConfigArgParse", "boto3", "pyjks", "pyopenssl", "pycryptodome"],
     classifiers=[
         "Programming Language :: Python :: 2",
         "License :: OSI Approved :: MIT License",
