@@ -24,18 +24,12 @@ sample_args = {
     "truststore_certs": "my-truststore-certs",
     "log_level": "ANY"
 }
-dummy_args = namedtuple("Employee", sample_args.keys())(*sample_args.values())
+dummy_args = namedtuple("My-Parsed-Args", sample_args.keys())(*sample_args.values())
 
 downloaded_data = {
-    'Certificate': 'result-cert',
-    'CertificateChain': 'result-chain',
-    'PrivateKey': 'encrypted-key'
-}
-
-result_data = {
-    'Certificate': 'result-cert',
-    'CertificateChain': 'result-chain',
-    'PrivateKey': 'decrypted-key'
+    'Certificate': 'downloaded-cert',
+    'CertificateChain': 'NOT-USED',
+    'PrivateKey': 'downloaded-encrypted-key'
 }
 
 
@@ -61,13 +55,11 @@ class TestRetriever(unittest.TestCase):
         dummy_key_object = MagicMock()
         rsa_util.import_key.return_value = dummy_key_object
         dummy_key_object.export_key = MagicMock()
-        dummy_key_object.export_key.return_value = 'decrypted-key'
+        dummy_key_object.export_key.return_value = 'in-memory-decrypted-key'
 
         s3_client = MagicMock()
-        s3_client.get_object = MagicMock()
-        s3_client.get_object.return_value = "your-s3-data"
 
-        mocked_parse_trusted_cert_arg.return_value = "result-trusted-certs"
+        mocked_parse_trusted_cert_arg.return_value = 'result-trusted-certs'
 
         # When
         retriever.retrieve_key_and_cert_and_make_stores(acm_client,
@@ -77,14 +69,16 @@ class TestRetriever(unittest.TestCase):
                                                         dummy_args)
 
         # Then
-        acm_client_call = [call(CertificateArn='my-cert-arn', Passphrase='my-key-passphrase')]
-        acm_client.export_certificate.assert_has_calls(acm_client_call)
+        acm_client.export_certificate.assert_called_once_with(
+            CertificateArn='my-cert-arn', Passphrase='my-key-passphrase')
+
+        rsa_util.import_key.assert_called_once_with('encrypted-key', 'my-key-passphrase')
 
         mocked_generate_keystore.assert_called_once_with(
             "my-keystore-path",
             "my-keystore-password",
-            result_data['PrivateKey'],
-            result_data['Certificate'],
+            'in-memory-decrypted-key',
+            'downloaded-cert',
             "my-key-alias",
             "my-key-password"
         )
