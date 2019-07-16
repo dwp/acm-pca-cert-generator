@@ -35,6 +35,14 @@ def parse_args(args):
         help="ARN in AWS ACM to use to fetch the required cert, cert chain, and key",
     )
     p.add(
+        "--add-downloaded-chain-to-truststore",
+        choices=["true", "false"],
+        default="false",
+        env_var="RETRIEVER_ADD_DOWNLOADED_CHAIN",
+        help="Whether or not to add the downloaded cert chain from te ARN "
+             "to the trust store",
+    )
+    p.add(
         "--acm-key-passphrase",
         required=True,
         env_var="RETRIEVER_ACM_KEY_PASSPHRASE",
@@ -130,6 +138,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     """Create a Keystore and Truststore.
 
     Also creates a Truststore with files from S3.
+    Optionally adds the downloaded cert chain into the TrustStore.
 
     Args:
         args (Object): The parsed command line arguments
@@ -156,9 +165,12 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
         args.truststore_aliases, args.truststore_certs
     )
 
-    # When we know whether or not to add the ACM chain, we'd do something like this
-    # trusted_certs.add (
-    #   {"alias": "aws-cert", "cert": cert_and_key_data["CertificateChain"] } )
+    # When we know whether or not to add our own ACM chain, we'd do something like this:
+    if args.add_downloaded_chain_to_truststore == "true":
+        trusted_certs.append({
+            "alias": "aws-cert-chain",
+            "cert": cert_and_key_data["CertificateChain"],
+            "source": "memory"})
 
     truststore_util.generate_truststore(
         s3_util, args.truststore_path, args.truststore_password, trusted_certs

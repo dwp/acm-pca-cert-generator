@@ -16,26 +16,30 @@ except ImportError:
 logger = logging.getLogger("truststore")
 
 
-def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
+def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs_s3_urls):
     """Split the CLI arguments for trusted cert aliases and paths.
 
     Args:
         trusted_cert_aliases (str): comma-separated list of certificate aliases
                                     to add to the truststore
-        trusted_certs (str): comma-separated list of certificates (paths) to add
-                             to the truststore
+        trusted_certs_s3_urls (str): comma-separated list of certificates (paths) to
+                                    add to the truststore
 
     Returns:
         list of dicts: A list of {"alias": "string", "cert": "string"} dicts
-                       containing a mapping of alias name to certifificate path
-                       for trusted certificates
+                       containing a mapping of alias name to certificate path
+                       for trusted certificates, i.e.
+                       [
+                        {"alias": "a1", "cert": "c1", "source": "s3"},
+                        {"alias": "a2", "cert": "c2", "source": "s3"},
+                       ...]
 
     Raises:
         ValueError: If the number of trusted_cert_aliases and trusted_certs don't match
 
     """
     aliases = trusted_cert_aliases.split(",")
-    cert_paths = trusted_certs.split(",")
+    cert_paths = trusted_certs_s3_urls.split(",")
     if len(aliases) != len(cert_paths):
         raise ValueError(
             "The number of trusted certificate aliases ({}) and trusted "
@@ -44,8 +48,8 @@ def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
     certs = []
     i = 0
     for alias in aliases:
-        cert = {"alias": alias, "cert": cert_paths[i]}
-        certs.append(cert)
+        cert_data = {"alias": alias, "cert": cert_paths[i], "source": "s3"}
+        certs.append(cert_data)
         i += 1
     return certs
 
@@ -111,8 +115,40 @@ def parse_s3_url(url):
     return {"bucket": bucket, "key": key}
 
 
+def fetch_cert(source, entry, s3_client):
+    """Fetch a cert for s3 or use text in memory.
+
+    Args:
+        source (String): A valid source, i.e. s3 or memory
+        entry (String): The s3 url, or the plain text
+        s3_client (Object): The aws utils to use
+
+    Returns:
+        pem_cert_body (String): Newline separated pem data
+    """
+
+    if source == "s3":
+        bucket_and_key = parse_s3_url(entry)
+        logger.info("...reading s3 source = {}".format(bucket_and_key))
+        pem_cert = s3_client.get_object(
+            Bucket=bucket_and_key["bucket"],
+            Key=bucket_and_key["key"])
+        pem_cert_body = pem_cert["Body"].read()
+    elif source == "memory":
+        logger.info("...reading from memory")
+        pem_cert_body = entry
+    else:
+        raise ValueError("Invalid cert entry type {}, "
+                         "must be one of s3, memory".format(source))
+
+    return pem_cert_body
+
+
 def generate_truststore(s3_client, truststore_path, truststore_password, certs):
     """Generate a Java TrustStore.
+
+    Supports certs that are either specified from an s3 url,
+    or provided in plain text in memory
 
     Args:
         s3_client (Object): The aws utils to use
@@ -124,18 +160,6 @@ def generate_truststore(s3_client, truststore_path, truststore_password, certs):
 
     """
     logger.info("Generating Java TrustStore")
-    trusted_certs = []
-    for cert_entry in certs:
-        alias = cert_entry["alias"]
-        cert = parse_s3_url(cert_entry["cert"])
-        pem_cert = s3_client.get_object(Bucket=cert["bucket"], Key=cert["key"])
-        x509_cert = OpenSSL.crypto.load_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, pem_cert["Body"].read().decode("utf-8")
-        )
-        asn_cert = OpenSSL.crypto.dump_certificate(
-            OpenSSL.crypto.FILETYPE_ASN1, x509_cert
-        )
-        trusted_certs.append(jks.TrustedCertEntry.new(alias, asn_cert))
 
     try:
         new_dir = os.path.dirname(truststore_path)
@@ -144,6 +168,24 @@ def generate_truststore(s3_client, truststore_path, truststore_password, certs):
         # Raise only if the directory doesn't already exist
         if not os.path.isdir(new_dir):
             raise
+
+    trusted_certs = []
+    for cert_entry in certs:
+        alias = cert_entry["alias"]
+        entry = cert_entry["cert"]
+        source = cert_entry["source"]
+        logger.info("...Processing cert with alias = {} from {}".format(alias, source))
+
+        pem_cert_body = fetch_cert(source, entry, s3_client)
+        logger.debug("...cert body = {}".format(pem_cert_body))
+
+        x509_cert = OpenSSL.crypto.load_certificate(
+            OpenSSL.crypto.FILETYPE_PEM, pem_cert_body.decode("utf-8")
+        )
+        asn_cert = OpenSSL.crypto.dump_certificate(
+            OpenSSL.crypto.FILETYPE_ASN1, x509_cert
+        )
+        trusted_certs.append(jks.TrustedCertEntry.new(alias, asn_cert))
 
     truststore = jks.KeyStore.new("jks", trusted_certs)
     truststore.save(truststore_path, truststore_password)
