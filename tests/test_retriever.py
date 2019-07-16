@@ -24,7 +24,7 @@ sample_args = {
     "truststore_certs": "my-truststore-certs",
     "log_level": "ANY"
 }
-dummy_args = namedtuple("My-Parsed-Args", sample_args.keys())(*sample_args.values())
+dummy_args = namedtuple("DummyParsedArgs", sample_args.keys())(*sample_args.values())
 
 downloaded_data = {
     'Certificate': 'downloaded-cert',
@@ -52,10 +52,10 @@ class TestRetriever(unittest.TestCase):
 
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
-        dummy_key_object = MagicMock()
-        rsa_util.import_key.return_value = dummy_key_object
-        dummy_key_object.export_key = MagicMock()
-        dummy_key_object.export_key.return_value = 'in-memory-decrypted-key'
+        dummy_rsakey_object = MagicMock()
+        rsa_util.import_key.return_value = dummy_rsakey_object
+        dummy_rsakey_object.export_key = MagicMock()
+        dummy_rsakey_object.export_key.return_value = 'in-memory-decrypted-key'
 
         s3_client = MagicMock()
 
@@ -72,7 +72,7 @@ class TestRetriever(unittest.TestCase):
         acm_client.export_certificate.assert_called_once_with(
             CertificateArn='my-cert-arn', Passphrase='my-key-passphrase')
 
-        rsa_util.import_key.assert_called_once_with('encrypted-key', 'my-key-passphrase')
+        rsa_util.import_key.assert_called_once_with('downloaded-encrypted-key', 'my-key-passphrase')
 
         mocked_generate_keystore.assert_called_once_with(
             "my-keystore-path",
