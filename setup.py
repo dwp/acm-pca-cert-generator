@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="acm_cert_helper",
-    version="0.0.1",
+    version="0.4.0",
     author="DWP DataWorks",
     author_email="dataworks@digital.uc.dwp.gov.uk",
     description="Creates a local Keystore and Truststore by generating a cert "
