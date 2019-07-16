@@ -12,8 +12,8 @@ except ImportError:
     from unittest.mock import call
 
 sample_args = {
-    "acm_key_arn": "my-key-arn",
     "acm_cert_arn": "my-cert-arn",
+    "acm_key_passphrase": "my-key-passphrase",
     "keystore_path": "my-keystore-path",
     "keystore_password": "my-keystore-password",
     "private_key_alias": "my-key-alias",
@@ -26,25 +26,17 @@ sample_args = {
 }
 dummy_args = namedtuple("Employee", sample_args.keys())(*sample_args.values())
 
-result_key = {
-    'Certificate': 'result-key-cert',
-    'CertificateChain': 'result-key-chain'
+downloaded_data = {
+    'Certificate': 'result-cert',
+    'CertificateChain': 'result-chain',
+    'PrivateKey': 'encrypted-key'
 }
 
-result_cert = {
-    'Certificate': 'result-cert-cert',
-    'CertificateChain': 'result-cert-chain'
+result_data = {
+    'Certificate': 'result-cert',
+    'CertificateChain': 'result-chain',
+    'PrivateKey': 'decrypted-key'
 }
-
-
-def dummy_client(*args, **kwargs):
-    # if args[0] == 's3':
-    mock_client = MagicMock()
-
-    if args[0] == 'acm':
-        mock_client.get_certificate = MagicMock()
-
-    return mock_client
 
 
 class TestRetriever(unittest.TestCase):
@@ -59,23 +51,40 @@ class TestRetriever(unittest.TestCase):
             mocked_parse_trusted_cert_arg
     ):
 
+        # Given
         acm_client = MagicMock()
-        acm_client.get_certificate = MagicMock()
-        s3_client = MagicMock()
+        acm_client.export_certificate = MagicMock()
+        acm_client.export_certificate.return_value = downloaded_data
 
-        acm_client.get_certificate.side_effect = [result_key, result_cert]
+        rsa_util = MagicMock()
+        rsa_util.import_key = MagicMock()
+        dummy_key_object = MagicMock()
+        rsa_util.import_key.return_value = dummy_key_object
+        dummy_key_object.export_key = MagicMock()
+        dummy_key_object.export_key.return_value = 'decrypted-key'
+
+        s3_client = MagicMock()
+        s3_client.get_object = MagicMock()
+        s3_client.get_object.return_value = "your-s3-data"
+
         mocked_parse_trusted_cert_arg.return_value = "result-trusted-certs"
 
-        # retrieve_key_and_cert(args, acm_client, s3_client, truststore_utils)
-        retriever.retrieve_key_and_cert(dummy_args, acm_client, s3_client, truststore_utils)
-        acm_client_calls = [call(CertificateArn='my-key-arn'), call(CertificateArn='my-cert-arn')]
-        acm_client.get_certificate.assert_has_calls(acm_client_calls)
+        # When
+        retriever.retrieve_key_and_cert_and_make_stores(acm_client,
+                                                        s3_client,
+                                                        truststore_utils,
+                                                        rsa_util,
+                                                        dummy_args)
+
+        # Then
+        acm_client_call = [call(CertificateArn='my-cert-arn', Passphrase='my-key-passphrase')]
+        acm_client.export_certificate.assert_has_calls(acm_client_call)
 
         mocked_generate_keystore.assert_called_once_with(
             "my-keystore-path",
             "my-keystore-password",
-            result_key['Certificate'],
-            result_cert['Certificate'],
+            result_data['PrivateKey'],
+            result_data['Certificate'],
             "my-key-alias",
             "my-key-password"
         )
@@ -85,7 +94,6 @@ class TestRetriever(unittest.TestCase):
             "my-truststore-certs"
         )
 
-        # s3_util, args.truststore_path, args.truststore_password, trusted_certs
         mocked_generate_truststore.assert_called_once_with(
             s3_client,
             "my-truststore-path",

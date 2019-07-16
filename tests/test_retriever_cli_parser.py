@@ -4,8 +4,8 @@ from acm_cert_retriever import retriever
 
 def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_list():
     args = """
-        --acm-key-arn A
-        --acm-cert-arn B
+        --acm-cert-arn A
+        --acm-key-passphrase B
         --keystore-path C 
         --keystore-password D
         --private-key-alias E
@@ -19,8 +19,8 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_
 
     result = retriever.parse_args(args)
 
-    assert result.acm_key_arn == "A"
-    assert result.acm_cert_arn == "B"
+    assert result.acm_cert_arn == "A"
+    assert result.acm_key_passphrase == "B"
     assert result.keystore_path == "C"
     assert result.keystore_password == "D"
     assert result.private_key_alias == "E"
@@ -34,8 +34,8 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_
 
 def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_env_vars():
 
-    os.environ['RETRIEVER_ACM_KEY_ARN'] = "A"
-    os.environ['RETRIEVER_ACM_CERT_ARN'] = "B"
+    os.environ['RETRIEVER_ACM_CERT_ARN'] = "A"
+    os.environ['RETRIEVER_ACM_KEY_PASSPHRASE'] = "B"
     os.environ['RETRIEVER_KEYSTORE_PATH'] = "C"
     os.environ['RETRIEVER_KEYSTORE_PASSWORD'] = "D"
     os.environ['RETRIEVER_PRIVATE_KEY_ALIAS'] = "E"
@@ -50,8 +50,8 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_en
 
     os.environ.clear()
 
-    assert result.acm_key_arn == "A"
-    assert result.acm_cert_arn == "B"
+    assert result.acm_cert_arn == "A"
+    assert result.acm_key_passphrase == "B"
     assert result.keystore_path == "C"
     assert result.keystore_password == "D"
     assert result.private_key_alias == "E"

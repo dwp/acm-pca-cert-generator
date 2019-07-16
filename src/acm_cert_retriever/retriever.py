@@ -99,13 +99,14 @@ def parse_args(args):
     return p.parse_args(args)
 
 
-def retrieve_key_and_cert(acm_util, acm_cert_arn, acm_key_passphrase):
+def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
     """Download a key and certificate and certificate chain form ACM.
 
     Also creates a Truststore with files from S3.
 
     Args:
         acm_util (Object): The boto3 utility to use
+        rsa_util (Object): The Crypto RSA utility to use
         acm_cert_arn (String): ARN of the certificate to export
         acm_key_passphrase (String): temporary password to use for key encryption
 
@@ -118,7 +119,7 @@ def retrieve_key_and_cert(acm_util, acm_cert_arn, acm_key_passphrase):
         CertificateArn=acm_cert_arn,
         Passphrase=acm_key_passphrase)
 
-    encrypted_key = RSA.import_key(all_data['PrivateKey'], acm_key_passphrase)
+    encrypted_key = rsa_util.import_key(all_data['PrivateKey'], acm_key_passphrase)
     decrypted_key = encrypted_key.export_key()
     all_data['PrivateKey'] = decrypted_key
 
@@ -166,13 +167,23 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     logger.info("Created KeyStore and TrustStore")
 
 
+def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util, rsa_util, args):
+    """Create a Keystore and Truststore from AWS data."""
+    cert_and_key = retrieve_key_and_cert(acm_util,
+                                         rsa_util,
+                                         args.acm_cert_arn,
+                                         args.acm_key_passphrase)
+    create_stores(args, cert_and_key, s3_util, truststore_util)
+
+
 def _main(args):
     args = parse_args(args)
     logger_utils.setup_logging(logger, args.log_level)
-    cert_and_key = retrieve_key_and_cert(acm_client,
-                                         args.acm_cert_arn,
-                                         args.acm_key_passphrase)
-    create_stores(args, cert_and_key, s3_client, truststore_utils)
+    retrieve_key_and_cert_and_make_stores(acm_client,
+                                          s3_client,
+                                          truststore_utils,
+                                          RSA,
+                                          args)
 
 
 def main():
