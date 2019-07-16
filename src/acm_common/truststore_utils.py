@@ -98,7 +98,7 @@ def parse_s3_url(url):
     """Extract the S3 bucket name and key from a given S3 URL.
 
     Args:
-        url (str): The S3 URL to parse
+        url (str): The S3 URL to parse i.e. s3://bucket/folder/file.txt
 
     Returns:
         dict: A {"bucket": "string", "key": "string"} dict representing the
@@ -125,8 +125,8 @@ def fetch_cert(source, entry, s3_client):
 
     Returns:
         pem_cert_body (String): Newline separated pem data
-    """
 
+    """
     if source == "s3":
         bucket_and_key = parse_s3_url(entry)
         logger.info("...reading s3 source = {}".format(bucket_and_key))

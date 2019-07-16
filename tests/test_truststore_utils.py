@@ -57,15 +57,17 @@ def test_generate_keystore():
 def test_generate_truststore():
     truststore_path = "tests/tmp/truststore.jks"
     truststore_password = "password1"
-    certs = [
-        {"alias": "myca1", "cert": "s3://certbucket/ca1.pem"},
-        {"alias": "myca2", "cert": "s3://certbucket/ca2.pem"},
-    ]
 
     pkey = OpenSSL.crypto.PKey()
     pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
     trusted_cert_pem = _generate_self_signed_cert(pkey)
     get_object_params = {"Bucket": "certbucket", "Key": ANY}
+
+    certs = [
+        {"alias": "myca1", "cert": "s3://certbucket/ca1.pem", "source": "s3"},
+        {"alias": "myca2", "cert": trusted_cert_pem, "source": "memory"},
+    ]
+
     s3 = botocore.session.get_session().create_client("s3")
     with Stubber(s3) as stubber:
         stubber.add_response(
