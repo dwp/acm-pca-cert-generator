@@ -167,8 +167,18 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     logger.info("Created KeyStore and TrustStore")
 
 
-def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util, rsa_util, args):
-    """Create a Keystore and Truststore from AWS data."""
+def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
+                                          rsa_util, args):
+    """Create a Keystore and Truststore from AWS data.
+
+    Args:
+        acm_util (Object): The boto3 utility to use
+        s3_util (Object): The boto3 utility to use
+        truststore_util (Object): The utility package to pass the data to
+        rsa_util (Object): The Crypto RSA utility to use
+        args (Object): The parsed command line arguments
+
+    """
     cert_and_key = retrieve_key_and_cert(acm_util,
                                          rsa_util,
                                          args.acm_cert_arn,
