@@ -10,14 +10,10 @@ import re
 import sys
 from acm_common import logger_utils, truststore_utils
 
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
-
 
 logger = logging.getLogger("certgen")
 subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
+pem_type = OpenSSL.crypto.FILETYPE_PEM
 
 
 def check_key_length(value):
@@ -281,7 +277,7 @@ def generate_private_key(key_type, key_bits):
             "Invalid value for key_type. Only 'RSA' and 'DSA' are supported."
         )
     key.generate_key(openssl_key_type, key_bits)
-    private_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    private_key = OpenSSL.crypto.dump_privatekey(pem_type, key)
     logger.info("Private key generated")
     return private_key
 
@@ -307,15 +303,14 @@ def generate_csr(key, digest, subject_details):
     csr = OpenSSL.crypto.X509Req()
     subject = csr.get_subject()
 
-    subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
     for name_part in subject_name_parts:
         setattr(subject, name_part, subject_details[name_part])
 
-    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    pkey = OpenSSL.crypto.load_privatekey(pem_type, key)
     csr.set_pubkey(pkey)
     csr.sign(pkey, digest)
 
-    signing_result = OpenSSL.crypto.dump_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
+    signing_result = OpenSSL.crypto.dump_certificate_request(pem_type, csr)
     logger.info("Certificate Signing Request done")
     return signing_result
 
@@ -377,13 +372,14 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
 
 
 def gather_subjects(args):
-    """Creates a dictionary of the subjects for the CSR
+    """Create a dictionary of the subjects for the CSR.
 
     Args:
         args (Object): The parsed arguments
 
     Returns:
         subject_details (Dict): The gathered subjects
+
     """
     subject_details = {}
     for name_part in subject_name_parts:

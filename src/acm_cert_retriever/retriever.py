@@ -100,7 +100,7 @@ def parse_args(args):
 
 
 def retrieve_key_and_cert(acm_util, acm_cert_arn, acm_key_passphrase):
-    """Download a key and certificate and certificate chain form ACM, and print them to the console.
+    """Download a key and certificate and certificate chain form ACM.
 
     Also creates a Truststore with files from S3.
 
@@ -111,9 +111,13 @@ def retrieve_key_and_cert(acm_util, acm_cert_arn, acm_key_passphrase):
 
     Returns:
         all_data (Dict): THe json result, with the key encrypted by the passphrase
+
     """
     logger.info("Retrieving cert and key from AWS")
-    all_data = acm_util.export_certificate(CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase)
+    all_data = acm_util.export_certificate(
+        CertificateArn=acm_cert_arn,
+        Passphrase=acm_key_passphrase)
+
     encrypted_key = RSA.import_key(all_data['PrivateKey'], acm_key_passphrase)
     decrypted_key = encrypted_key.export_key()
     all_data['PrivateKey'] = decrypted_key
@@ -135,6 +139,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
 
     Returns:
         all_data (Dict): The json result, with the key in plain text
+
     """
     logger.info("Creating KeyStore and TrustStore")
 
@@ -164,7 +169,9 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
 def _main(args):
     args = parse_args(args)
     logger_utils.setup_logging(logger, args.log_level)
-    cert_and_key = retrieve_key_and_cert(acm_client, args.acm_cert_arn, args.acm_key_passphrase)
+    cert_and_key = retrieve_key_and_cert(acm_client,
+                                         args.acm_cert_arn,
+                                         args.acm_key_passphrase)
     create_stores(args, cert_and_key, s3_client, truststore_utils)
 
 

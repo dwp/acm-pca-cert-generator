@@ -18,8 +18,7 @@ setuptools.setup(
     entry_points={
         "console_scripts": [
             "acm-pca-cert-generator=acm_pca_cert_generator.certgen:main",
-            "acm-cert-retriever=acm_cert_retriever.retriever:main",
-            "acm-cert-tester=acm_cert_retriever.sample_retrieve:main"
+            "acm-cert-retriever=acm_cert_retriever.retriever:main"
         ]
     },
     package_dir={"": "src"},
