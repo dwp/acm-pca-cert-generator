@@ -112,21 +112,13 @@ def retrieve_key_and_cert(acm_util, acm_cert_arn, acm_key_passphrase):
     Returns:
         all_data (Dict): THe json result, with the key encrypted by the passphrase
     """
+    logger.info("Retrieving cert and key from AWS")
     all_data = acm_util.export_certificate(CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase)
-
-    print("-------------")
-    print(all_data['Certificate'])
-    print("-------------")
-    print(all_data['CertificateChain'])
-    print("-------------")
-
     encrypted_key = RSA.import_key(all_data['PrivateKey'], acm_key_passphrase)
     decrypted_key = encrypted_key.export_key()
-    print(decrypted_key)
-    print("-------------")
-
     all_data['PrivateKey'] = decrypted_key
 
+    logger.info("Retrieved cert and key from AWS")
     return all_data
 
 
@@ -144,6 +136,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     Returns:
         all_data (Dict): The json result, with the key in plain text
     """
+    logger.info("Creating KeyStore and TrustStore")
 
     truststore_util.generate_keystore(
         args.keystore_path,
@@ -165,6 +158,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     truststore_util.generate_truststore(
         s3_util, args.truststore_path, args.truststore_password, trusted_certs
     )
+    logger.info("Created KeyStore and TrustStore")
 
 
 def _main(args):

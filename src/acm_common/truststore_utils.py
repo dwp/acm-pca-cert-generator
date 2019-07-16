@@ -80,13 +80,14 @@ def generate_keystore(
 
     keystore = jks.KeyStore.new("jks", [pke])
     try:
-        newdir = os.path.dirname(keystore_path)
-        os.makedirs(newdir)
+        new_dir = os.path.dirname(keystore_path)
+        os.makedirs(new_dir)
     except OSError:
         # Raise only if the directory doesn't already exist
-        if not os.path.isdir(newdir):
+        if not os.path.isdir(new_dir):
             raise
     keystore.save(keystore_path, keystore_password)
+    logger.info("Java KeyStore generated")
 
 
 def parse_s3_url(url):
@@ -137,12 +138,13 @@ def generate_truststore(s3_client, truststore_path, truststore_password, certs):
         trusted_certs.append(jks.TrustedCertEntry.new(alias, asn_cert))
 
     try:
-        newdir = os.path.dirname(truststore_path)
-        os.makedirs(newdir)
+        new_dir = os.path.dirname(truststore_path)
+        os.makedirs(new_dir)
     except OSError:
         # Raise only if the directory doesn't already exist
-        if not os.path.isdir(newdir):
+        if not os.path.isdir(new_dir):
             raise
 
     truststore = jks.KeyStore.new("jks", trusted_certs)
     truststore.save(truststore_path, truststore_password)
+    logger.info("Java TrustStore generated")

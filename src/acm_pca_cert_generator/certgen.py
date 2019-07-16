@@ -17,6 +17,7 @@ except ImportError:
 
 
 logger = logging.getLogger("certgen")
+subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
 
 
 def check_key_length(value):
@@ -280,7 +281,9 @@ def generate_private_key(key_type, key_bits):
             "Invalid value for key_type. Only 'RSA' and 'DSA' are supported."
         )
     key.generate_key(openssl_key_type, key_bits)
-    return OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    private_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    logger.info("Private key generated")
+    return private_key
 
 
 def generate_csr(key, digest, subject_details):
@@ -311,7 +314,10 @@ def generate_csr(key, digest, subject_details):
     pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
     csr.set_pubkey(pkey)
     csr.sign(pkey, digest)
-    return OpenSSL.crypto.dump_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
+
+    signing_result = OpenSSL.crypto.dump_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
+    logger.info("Certificate Signing Request done")
+    return signing_result
 
 
 def create_validity_dict(validity_period):
@@ -363,30 +369,26 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
     waiter.wait(CertificateAuthorityArn=ca_arn, CertificateArn=cert_arn)
 
     logger.info("Retrieving signed cert from ACM PCA")
-    return acmpca_client.get_certificate(
+    aws_result = acmpca_client.get_certificate(
         CertificateAuthorityArn=ca_arn, CertificateArn=cert_arn
     )
+    logger.info("Cert signing done by ACM PCA")
+    return aws_result
 
 
-def parse_s3_url(url):
-    """Extract the S3 bucket name and key from a given S3 URL.
+def gather_subjects(args):
+    """Creates a dictionary of the subjects for the CSR
 
     Args:
-        url (str): The S3 URL to parse
+        args (Object): The parsed arguments
 
     Returns:
-        dict: A {"bucket": "string", "key": "string"} dict representing the
-              S3 object identified by the given URL
-
+        subject_details (Dict): The gathered subjects
     """
-    parsed_url = urlparse(url)
-    if parsed_url.scheme != "s3":
-        raise ValueError("S3 URLs must start with 's3://'")
-
-    bucket = parsed_url.netloc.split(".")[0]
-    key = parsed_url.path.lstrip("/")
-
-    return {"bucket": bucket, "key": key}
+    subject_details = {}
+    for name_part in subject_name_parts:
+        name = "subject_{}".format(name_part.lower())
+        subject_details[name_part] = getattr(args, name)
 
 
 def _main(args):
@@ -394,18 +396,14 @@ def _main(args):
     logger_utils.setup_logging(logger, args.log_level)
     key = generate_private_key(args.key_type, args.key_length)
 
-    subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
-    subject_details = {}
-    for name_part in subject_name_parts:
-        arg = "subject_{}".format(name_part.lower())
-        subject_details[name_part] = getattr(args, arg)
-
+    subject_details = gather_subjects(args)
     csr = generate_csr(key, args.key_digest_algorithm, subject_details)
 
     acmpca_client = boto3.client("acm-pca")
     cert_and_chain = sign_cert(
         acmpca_client, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
+
     truststore_utils.generate_keystore(
         args.keystore_path,
         args.keystore_password,

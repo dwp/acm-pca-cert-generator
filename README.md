@@ -49,54 +49,10 @@ from ACM, and a Java TrustStore containing one or more trusted certificates held
 
 The AWS services that call this script need the following permissions:
 
-* `acm-pca:GetCertficate` on the ACM data specified in the `--acm-key-arn` ands `--acm-cert-arn` arguments
+* `acm-pca:GetCertficate` on the ACM data specified in the `--acm-key-arn` argument
   - e.g. `arn:aws:acm:AWS_Region:AWS_Account:certificate/*`
 * `s3:GetObject` on all buckets specified in the `--truststore-certs` argument
   - e.g. `arn:aws:s3:::examplebucket/*`
-
-
-### Running the debug sample
-
-You can try this set of commands locally. Us ethe arn of the cert thus generated:
-
-```
-$ aws acm request-certificate --domain-name www.dummy-test-example.com --idempotency-token 22563 --options CertificateTransparencyLoggingPreference=DISABLED --certificate-authority-arn arn:aws:acm-pca:eu-west-2:475593055014:certificate-authority/d5a9f633-ee2d-4d76-aadf-078c67452e47 --profile dataworks-development 
-
-{
-    "CertificateArn": "arn:aws:acm:eu-west-2:475593055014:certificate/eccdea0b-a61c-4fe2-a876-32a7de202fa5"
-}
-
-$ aws acm export-certificate --certificate-arn arn:aws:acm:eu-west-2:475593055014:certificate/eccdea0b-a61c-4fe2-a876-32a7de202fa5 --profile dataworks-development --output json --passphrase he11o-mumm3
-
-{
-    "PrivateKey": 
-      "-----BEGIN ENCRYPTED PRIVATE KEY----- 
-        ...PKCS8 Base64-encoded encrypted private key ...
-       -----END ENCRYPTED PRIVATE KEY-----",
-    "CertificateChain": 
-       "-----BEGIN CERTIFICATE-----   
-        ...Base64-encoded certificate...
-        -----END CERTIFICATE-----
-        -----BEGIN CERTIFICATE-----
-        ...Base64-encoded private key...
-        -----END CERTIFICATE-----",
-    "Certificate": 
-      "-----BEGIN CERTIFICATE----- 
-        ...Base64-encoded certificate...
-       -----END CERTIFICATE-----"
-}
-
-$ AWS_DEFAULT_PROFILE=dataworks-development \
-AWS_DEFAULT_REGION=eu-west-2 \
-python ./src/acm_cert_retriever/sample_retrieve.py \
---acm-cert-arn arn:aws:acm:eu-west-2:475593055014:certificate/eccdea0b-a61c-4fe2-a876-32a7de202fa5 \
---acm-cert-passphrase he110-mum3
-
-----
-cert, chain and encrypted key 
-----
-```
-
 
 ### Running
 
@@ -106,9 +62,9 @@ majority of which are mandatory. Alternatively, the same information can be
 specified using environment variables:
 
 ```
-acm-pca-cert-generator --help
+acm-pca-cert-retriever --help
 
-usage: certgen.py [-h] --acm-key-arn KEY_ARN --acm-cert-arn CERT_ARN 
+usage: certgen.py [-h] --acm-cert-arn CERT_ARN --acm-key-passphrase PASSPHRASE 
                   --keystore-path KEYSTORE_PATH --keystore-password KEYSTORE_PASSWORD
                   --private-key-alias PRIVATE_KEY_ALIAS
                   [--private-key-password PRIVATE_KEY_PASSWORD]
@@ -127,12 +83,12 @@ values which override defaults.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --acm-key-arn KEY_ARN 
-                        ARN of a certificate key stored in ACM
-                        [env var: RETRIEVER_ACM_KEY_ARN]
   --acm-cert-arn CERT_ARN 
-                        ARN of a certificate stored in ACM
+                        ARN of a certificate, chain, and key stored in ACM, to export
                         [env var: RETRIEVER_ACM_CERT_ARN]
+  --acm-key-passphrase TEMP_PASSWORD
+                        Temporary password to use for encrypting the key on export
+                        [env var: RETRIEVER_ACM_KEY_PASSPHRASE]
   --keystore-path KEYSTORE_PATH
                         Filename of the keystore to save the signed keypair to
                         Should be different to truststore-path
@@ -176,13 +132,13 @@ The following downloads a fictitious key and cert for the Keystore and adds two 
 the Truststore:
 
 ```
-acm-cert-retriever --acm-key-arn arn:aws:acm:us-east-1:012345678901:certificate/a1a1a1a1a1 \
---acm-cert-arn arn:aws:acm:us-east-1:012345678901:certificate/b2b2b2b2b2b2 \
+acm-cert-retriever --acm-cert-arn arn:aws:acm:us-east-1:012345678901:certificate/a1a1a1a1a1 \
+--acm-key-passphrase P4ssw0rd1 \
 --keystore-path /tmp/keystore.jks \
---keystore-password P4ssw0rd1 \
+--keystore-password P4ssw0rd2 \
 --private-key-alias mykey \
 --truststore-path /tmp/truststore.jks \
---truststore-password P4ssw0rd2 \
+--truststore-password P4ssw0rd3 \
 --truststore-aliases ca1,ca2 \
 --truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem
 ```
@@ -322,11 +278,10 @@ acm-pca-cert-generator --key-type RSA --key-length 2048 --subject-c "GB" \
 --subject-st "Greater London" --subject-l "London" --subject-o "My Company" \
 --subject-ou "IT Department" --subject-cn "myfqdn.example.com" \
 --subject-emailaddress "me@example.com" \
---ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/506a130d-8519-45dc-903d-2a30709d6a33" \
+--ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/a1a1a1a1a1a1a1a1a1a1a1" \
 --signing-algorithm "SHA384WITHRSA" --validity-period=1d \
 --keystore-path /tmp/keystore.jks --keystore-password P4ssw0rd1 \
 --private-key-alias mykey --truststore-path /tmp/truststore.jks \
 --truststore-password P4ssw0rd2 --truststore-aliases ca1,ca2 \
 --truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem
 ```
-
