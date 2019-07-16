@@ -106,3 +106,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# IDEs
+/.vscode
+.idea
+*.iml

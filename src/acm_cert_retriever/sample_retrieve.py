@@ -5,7 +5,8 @@ import boto3
 import configargparse
 import logging
 import sys
-from Cryptodome.IO import PKCS8
+from Cryptodome.IO import PEM, PKCS8
+from Cryptodome.PublicKey import RSA
 from acm_common import logger_utils
 
 
@@ -72,16 +73,10 @@ def retrieve_key_and_cert(args, acm_util):
     print("-------------")
     print(all_data['CertificateChain'])
     print("-------------")
-    trimmed_key = all_data['PrivateKey'].trim()
-    print(trimmed_key)
-    print("-------------")
-
-    # decrypted_key = RSA.importKey(all_data['PrivateKey'], passphrase=args.acm_cert_passphrase)
-    # decrypted_key.decrypt(args.acm_cert_passphrase)
-
-    decrypted_key = PKCS8.unwrap(p8_private_key=trimmed_key, passphrase=args.acm_cert_passphrase)
-
-    print(decrypted_key)
+    
+    decrypted_key = RSA.import_key(all_data['PrivateKey'], args.acm_cert_passphrase)
+    
+    print(decrypted_key.export_key())
     print("-------------")
 
     return all_data

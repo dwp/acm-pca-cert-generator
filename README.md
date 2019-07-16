@@ -176,7 +176,7 @@ The following downloads a fictitious key and cert for the Keystore and adds two 
 the Truststore:
 
 ```
-acm-cert-reytriever --acm-key-arn arn:aws:acm:us-east-1:012345678901:certificate/a1a1a1a1a1 \
+acm-cert-retriever --acm-key-arn arn:aws:acm:us-east-1:012345678901:certificate/a1a1a1a1a1 \
 --acm-cert-arn arn:aws:acm:us-east-1:012345678901:certificate/b2b2b2b2b2b2 \
 --keystore-path /tmp/keystore.jks \
 --keystore-password P4ssw0rd1 \
