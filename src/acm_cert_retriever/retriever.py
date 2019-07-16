@@ -5,6 +5,7 @@ import boto3
 import configargparse
 import logging
 import sys
+from Cryptodome.PublicKey import RSA
 from acm_common import logger_utils, truststore_utils
 
 
@@ -28,16 +29,16 @@ def parse_args(args):
     )
 
     p.add(
-        "--acm-key-arn",
-        required=True,
-        env_var="RETRIEVER_ACM_KEY_ARN",
-        help="ARN in AWS ACM to use to fetch the required key",
-    )
-    p.add(
         "--acm-cert-arn",
         required=True,
         env_var="RETRIEVER_ACM_CERT_ARN",
-        help="ARN in AWS ACM to use to fetch the required certificate",
+        help="ARN in AWS ACM to use to fetch the required cert, cert chain, and key",
+    )
+    p.add(
+        "--acm-key-passphrase",
+        required=True,
+        env_var="RETRIEVER_ACM_KEY_PASSPHRASE",
+        help="Passphrase to use to encrypt the downloaded key",
     )
     p.add(
         "--keystore-path",
@@ -98,19 +99,51 @@ def parse_args(args):
     return p.parse_args(args)
 
 
-def retrieve_key_and_cert(args, acm_util, s3_util, truststore_util):
-    """Download a key and certificate chain form ACM, and puts them in a Keystore.
+def retrieve_key_and_cert(acm_util, acm_cert_arn, acm_key_passphrase):
+    """Download a key and certificate and certificate chain form ACM, and print them to the console.
+
+    Also creates a Truststore with files from S3.
+
+    Args:
+        acm_util (Object): The boto3 utility to use
+        acm_cert_arn (String): ARN of the certificate to export
+        acm_key_passphrase (String): temporary password to use for key encryption
+
+    Returns:
+        all_data (Dict): THe json result, with the key encrypted by the passphrase
+    """
+    all_data = acm_util.export_certificate(CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase)
+
+    print("-------------")
+    print(all_data['Certificate'])
+    print("-------------")
+    print(all_data['CertificateChain'])
+    print("-------------")
+
+    encrypted_key = RSA.import_key(all_data['PrivateKey'], acm_key_passphrase)
+    decrypted_key = encrypted_key.export_key()
+    print(decrypted_key)
+    print("-------------")
+
+    all_data['PrivateKey'] = decrypted_key
+
+    return all_data
+
+
+def create_stores(args, cert_and_key_data, s3_util, truststore_util):
+    """Create a Keystore and Truststore.
 
     Also creates a Truststore with files from S3.
 
     Args:
         args (Object): The parsed command line arguments
-        acm_util (Object): The boto3 utility to use
+        cert_and_key_data (Dict): A json with the cert, cert chain, and decrypted key
         s3_util (Object): The boto3 utility to use
         truststore_util (Object): The utility package to pass the data to
 
+    Returns:
+        all_data (Dict): The json result, with the key in plain text
     """
-    cert_and_key_data = acm_util.get_certificate(CertificateArn=args.acm_key_arn)
 
     truststore_util.generate_keystore(
         args.keystore_path,
@@ -137,7 +170,8 @@ def retrieve_key_and_cert(args, acm_util, s3_util, truststore_util):
 def _main(args):
     args = parse_args(args)
     logger_utils.setup_logging(logger, args.log_level)
-    retrieve_key_and_cert(args, acm_client, s3_client, truststore_utils)
+    cert_and_key = retrieve_key_and_cert(acm_client, args.acm_cert_arn, args.acm_key_passphrase)
+    create_stores(args, cert_and_key, s3_client, truststore_utils)
 
 
 def main():

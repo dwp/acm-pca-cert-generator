@@ -5,7 +5,6 @@ import boto3
 import configargparse
 import logging
 import sys
-from Cryptodome.IO import PEM, PKCS8
 from Cryptodome.PublicKey import RSA
 from acm_common import logger_utils
 
@@ -36,9 +35,9 @@ def parse_args(args):
         help="ARN in AWS ACM to use to fetch the required cert, key and certificate chain",
     )
     p.add(
-        "--acm-cert-passphrase",
+        "--acm-key-passphrase",
         required=True,
-        env_var="RETRIEVER_ACM_CERT_PASSPHRASE",
+        env_var="RETRIEVER_ACM_KEY_PASSPHRASE",
         help="Passphrase to use to encrypt the downloaded key",
     )
     p.add(
@@ -62,19 +61,19 @@ def retrieve_key_and_cert(args, acm_util):
         acm_util (Object): The boto3 utility to use
 
     Returns:
-        all_data (Dict): THe json result, with the key encrypted by the passphrase
+        all_data (Dict): The json result, with the key in plain text
     """
-    all_data = acm_util.export_certificate(CertificateArn=args.acm_cert_arn, Passphrase=args.acm_cert_passphrase)
+    all_data = acm_util.export_certificate(CertificateArn=args.acm_cert_arn, Passphrase=args.acm_key_passphrase)
     print("-------------")
     print("acm_cert_arn={}".format(args.acm_cert_arn))
-    print("acm_cert_passphrase={}".format(args.acm_cert_passphrase))
+    print("acm_cert_passphrase={}".format(args.acm_key_passphrase))
     print("-------------")
     print(all_data['Certificate'])
     print("-------------")
     print(all_data['CertificateChain'])
     print("-------------")
     
-    decrypted_key = RSA.import_key(all_data['PrivateKey'], args.acm_cert_passphrase)
+    decrypted_key = RSA.import_key(all_data['PrivateKey'], args.acm_key_passphrase)
     
     print(decrypted_key.export_key())
     print("-------------")
