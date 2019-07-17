@@ -35,24 +35,24 @@ def parse_args(args):
         help="ARN in AWS ACM to use to fetch the required cert, cert chain, and key",
     )
     p.add(
-        "--add-downloaded-chain-to-truststore",
-        choices=["true", "false"],
-        default="false",
-        env_var="RETRIEVER_ADD_DOWNLOADED_CHAIN",
-        help="Whether or not to add the downloaded cert chain from te ARN "
-             "to the trust store",
-    )
-    p.add(
         "--acm-key-passphrase",
         required=True,
         env_var="RETRIEVER_ACM_KEY_PASSPHRASE",
         help="Passphrase to use to encrypt the downloaded key",
     )
     p.add(
+        "--add-downloaded-chain-to-truststore",
+        choices=["true", "false"],
+        default="false",
+        env_var="RETRIEVER_ADD_DOWNLOADED_CHAIN",
+        help="Whether or not to add the downloaded cert chain from the ARN "
+             "to the trust store",
+    )
+    p.add(
         "--keystore-path",
         required=True,
         env_var="RETRIEVER_KEYSTORE_PATH",
-        help="Filename of the keystore to save the signed keypair to",
+        help="Filename to create for the Java Keystore",
     )
     p.add(
         "--keystore-password",
@@ -64,18 +64,18 @@ def parse_args(args):
         "--private-key-alias",
         required=True,
         env_var="RETRIEVER_PRIVATE_KEY_ALIAS",
-        help="The alias to store the private key under in the Java KeyStore",
+        help="The alias to use to store the private key in the Java KeyStore",
     )
     p.add(
         "--private-key-password",
         env_var="RETRIEVER_PRIVATE_KEY_PASSWORD",
-        help="The password used to protect ",
+        help="The password used to protect the private key in the Java KeyStore",
     )
     p.add(
         "--truststore-path",
         required=True,
         env_var="RETRIEVER_TRUSTSTORE_PATH",
-        help="Filename of the keystore to save trusted certificates to",
+        help="Filename to create for the Java TrustStore",
     )
     p.add(
         "--truststore-password",
@@ -93,8 +93,8 @@ def parse_args(args):
         "--truststore-certs",
         required=True,
         env_var="RETRIEVER_TRUSTSTORE_CERTS",
-        help="Comma-separated list of S3 URIs pointing at certificates to be "
-        "added to the Java TrustStore",
+        help="Comma-separated list of S3 URIs pointing at certificates to use for entries "
+             "in the Java TrustStore",
     )
     p.add(
         "--log-level",

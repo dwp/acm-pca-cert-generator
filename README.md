@@ -21,8 +21,7 @@ costs when running the tests.
 
 ## Installing locally from source.
 
-Running `tox` as above will compile the project.
-You can also build install and install it locally using
+Running `tox` as above will compile the project. You can also build and install it locally using
 
 ```
 $ python setup.py build install
@@ -32,6 +31,14 @@ The installation command above will place two commands in your path, `acm-cert-r
 `acm-pca-cert-generator`.  Each script takes a number of command line arguments, most of 
 which are mandatory. Alternatively, the same information can be specified using environment variables.
 
+
+## Cleaning outputs locally
+
+Running the following will remove all the local files created by tox, incase you need to tidy up:
+
+```
+rm -rf build dist .tox
+```
 
 ## Installing from github:
 
@@ -51,20 +58,20 @@ The AWS services that call this script need the following permissions:
 
 * `acm-pca:GetCertficate` on the ACM data specified in the `--acm-key-arn` argument
   - e.g. `arn:aws:acm:AWS_Region:AWS_Account:certificate/*`
-* `s3:GetObject` on all buckets specified in the `--truststore-certs` argument
+* `s3:GetObject` on all buckets and objects specified in the `--truststore-certs` argument
   - e.g. `arn:aws:s3:::examplebucket/*`
 
 ### Running
 
-The installation command above will place an `acm--cert-retriever` command in
-your path. The script takes a number of command line arguments, the vast
-majority of which are mandatory. Alternatively, the same information can be
-specified using environment variables:
+The installation command above will place an `acm-cert-retriever` command in
+your path. The script takes a number of command line arguments, most of which are mandatory. 
+Alternatively, the same information can be specified using environment variables:
 
 ```
 acm-pca-cert-retriever --help
 
 usage: certgen.py [-h] --acm-cert-arn CERT_ARN --acm-key-passphrase PASSPHRASE 
+                  --add-downloaded-chain-to-truststore {false, true}
                   --keystore-path KEYSTORE_PATH --keystore-password KEYSTORE_PASSWORD
                   --private-key-alias PRIVATE_KEY_ALIAS
                   [--private-key-password PRIVATE_KEY_PASSWORD]
@@ -81,41 +88,43 @@ https://goo.gl/R74nmi). If an arg is specified in more than one place, then
 commandline values override environment variables which override config file
 values which override defaults.
 
-optional arguments:
+Arguments:
   -h, --help            show this help message and exit
-  --acm-cert-arn CERT_ARN 
+  --acm-cert-arn CERT_ARN
                         ARN of a certificate, chain, and key stored in ACM, to export
                         [env var: RETRIEVER_ACM_CERT_ARN]
   --acm-key-passphrase TEMP_PASSWORD
                         Temporary password to use for encrypting the key on export
                         [env var: RETRIEVER_ACM_KEY_PASSPHRASE]
+  --add-downloaded-chain-to-truststore {false, true}
+                        Whether or not to add the downloaded cert chain from the ARN to the trust store
+                        [env var: RETRIEVER_ADD_DOWNLOADED_CHAIN]
   --keystore-path KEYSTORE_PATH
-                        Filename of the keystore to save the signed keypair to
+                        Filename to create for the Java Keystore
                         Should be different to truststore-path
                         [env var: RETRIEVER_KEYSTORE_PATH]
   --keystore-password KEYSTORE_PASSWORD
-                        Password for the Java Keystore 
+                        Password for the Java Keystore
                         [env var: RETRIEVER_KEYSTORE_PASSWORD]
   --private-key-alias PRIVATE_KEY_ALIAS
-                        The alias to store the private key under in the Java KeyStore 
+                        The alias to store the private key under in the Java KeyStore
                         [env var: RETRIEVER_PRIVATE_KEY_ALIAS]
   --private-key-password PRIVATE_KEY_PASSWORD
-                        The password used to protect 
+                        The password used to protect
                         [env var: RETRIEVER_PRIVATE_KEY_PASSWORD]
   --truststore-path TRUSTSTORE_PATH
-                        Filename of the keystore to save trusted certificates
-                        Should be different to keystore-path to 
+                        Filename to create for the Java TrustStore
+                        Should be different to keystore-path to
                         [env var: RETRIEVER_TRUSTSTORE_PATH]
   --truststore-password TRUSTSTORE_PASSWORD
-                        Password for the Java TrustStore 
+                        Password for the Java TrustStore
                         [env var: RETRIEVER_TRUSTSTORE_PASSWORD]
   --truststore-aliases TRUSTSTORE_ALIASES
-                        Comma-separated list of aliases to use for entries in
-                        the Java TrustStore 
+                        Comma-separated list of aliases to use for entries in the Java TrustStore
                         [env var: RETRIEVER_TRUSTSTORE_ALIASES]
   --truststore-certs TRUSTSTORE_CERTS
                         Comma-separated list of S3 URIs pointing at
-                        certificates to be added to the Java TrustStore 
+                        certificates to be added to the Java TrustStore
                         [env var: RETRIEVER_TRUSTSTORE_CERTS]
   --log-level {CRITICAL,ERROR,WARNING,INFO,DEBUG}
                         [env var: RETRIEVER_LOG_LEVEL]
@@ -132,7 +141,7 @@ The following downloads a fictitious key and cert for the Keystore and adds two 
 the Truststore:
 
 ```
-acm-cert-retriever --acm-cert-arn arn:aws:acm:us-east-1:012345678901:certificate/a1a1a1a1a1 \
+acm-cert-retriever --acm-cert-arn arn:aws:acm:us-east-1:012345678901:certificate/123a456b-7890-12cd-345e-6f78901f2a34 \
 --acm-key-passphrase P4ssw0rd1 \
 --keystore-path /tmp/keystore.jks \
 --keystore-password P4ssw0rd2 \
@@ -157,15 +166,14 @@ The AWS services that call this script need the following permissions:
   - e.g. `arn:aws:acm-pca:AWS_Region:AWS_Account:certificate-authority/*`
 * `acm-pca:GetCertficate` on the ACM PCA specified in the `--ca-arn` argument
   - e.g. `arn:aws:acm-pca:AWS_Region:AWS_Account:certificate-authority/*`
-* `s3:GetObject` on all buckets specified in the `--truststore-certs` argument
+* `s3:GetObject` on all buckets and objects specified in the `--truststore-certs` argument
   - e.g. `arn:aws:s3:::examplebucket/*`
 
 ### Running
 
 The installation command above will place an `acm-pca-cert-generator` command in
-your path. The script takes a number of command line arguments, the vast
-majority of which are mandatory. Alternatively, the same information can be
-specified using environment variables:
+your path. The script takes a number of command line arguments, most of which are mandatory. 
+Alternatively, the same information can be specified using environment variables:
 
 ```
 acm-pca-cert-generator --help
@@ -194,7 +202,7 @@ https://goo.gl/R74nmi). If an arg is specified in more than one place, then
 commandline values override environment variables which override config file
 values which override defaults.
 
-optional arguments:
+Arguments:
   -h, --help            show this help message and exit
   --key-type {RSA,DSA}  [env var: CERTGEN_KEY_TYPE]
   --key-length KEY_LENGTH
@@ -232,7 +240,7 @@ optional arguments:
                         for 1 day, 1 month and 1 year respectively 
                         [env var: CERTGEN_VALIDITY_PERIOD]
   --keystore-path KEYSTORE_PATH
-                        Filename of the keystore to save the signed keypair to
+                        Filename to create for the Java Keystore
                         Should be different to truststore-path
                         [env var: CERTGEN_KEYSTORE_PATH]
   --keystore-password KEYSTORE_PASSWORD
@@ -245,19 +253,19 @@ optional arguments:
                         The password used to protect 
                         [env var: CERTGEN_PRIVATE_KEY_PASSWORD]
   --truststore-path TRUSTSTORE_PATH
-                        Filename of the keystore to save trusted certificates
-                        Should be different to keystore-path  
+                        Filename to create for the Java TrustStore
+                        Should be different to keystore-path
                         [env var: CERTGEN_TRUSTSTORE_PATH]
   --truststore-password TRUSTSTORE_PASSWORD
-                        Password for the Java TrustStore 
+                        Password for the Java TrustStore
                         [env var: CERTGEN_TRUSTSTORE_PASSWORD]
   --truststore-aliases TRUSTSTORE_ALIASES
                         Comma-separated list of aliases to use for entries in
-                        the Java TrustStore 
+                        the Java TrustStore
                         [env var: CERTGEN_TRUSTSTORE_ALIASES]
   --truststore-certs TRUSTSTORE_CERTS
                         Comma-separated list of S3 URIs pointing at
-                        certificates to be added to the Java TrustStore 
+                        certificates to be added to the Java TrustStore
                         [env var: CERTGEN_TRUSTSTORE_CERTS]
   --log-level {CRITICAL,ERROR,WARNING,INFO,DEBUG}
                         [env var: CERTGEN_LOG_LEVEL]
@@ -278,7 +286,7 @@ acm-pca-cert-generator --key-type RSA --key-length 2048 --subject-c "GB" \
 --subject-st "Greater London" --subject-l "London" --subject-o "My Company" \
 --subject-ou "IT Department" --subject-cn "myfqdn.example.com" \
 --subject-emailaddress "me@example.com" \
---ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/a1a1a1a1a1a1a1a1a1a1a1" \
+--ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/123a456b-7890-12cd-345e-6f78901f2a34" \
 --signing-algorithm "SHA384WITHRSA" --validity-period=1d \
 --keystore-path /tmp/keystore.jks --keystore-password P4ssw0rd1 \
 --private-key-alias mykey --truststore-path /tmp/truststore.jks \

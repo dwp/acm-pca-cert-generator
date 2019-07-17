@@ -31,18 +31,18 @@ def check_key_length(value):
     """
     valid_key_lengths = [2048, 4096, 8192]
     try:
-        ivalue = int(value)
+        new_value = int(value)
     except Exception:
         raise configargparse.ArgumentTypeError(
             "{} is an invalid key length. Must be an integer.".format(value)
         )
-    if ivalue not in valid_key_lengths:
+    if new_value not in valid_key_lengths:
         raise configargparse.ArgumentTypeError(
             "{} is an invalid key length. Must be either 2048, 4096 or 8192.".format(
                 value
             )
         )
-    return ivalue
+    return new_value
 
 
 def check_validity_period(value):
@@ -200,7 +200,7 @@ def parse_args(args):
         "--keystore-path",
         required=True,
         env_var="CERTGEN_KEYSTORE_PATH",
-        help="Filename of the keystore to save the signed keypair to",
+        help="Filename for the Java Keystore",
     )
     p.add(
         "--keystore-password",
@@ -217,13 +217,13 @@ def parse_args(args):
     p.add(
         "--private-key-password",
         env_var="CERTGEN_PRIVATE_KEY_PASSWORD",
-        help="The password used to protect ",
+        help="The password used to protect the private key in the Java KeyStore",
     )
     p.add(
         "--truststore-path",
         required=True,
         env_var="CERTGEN_TRUSTSTORE_PATH",
-        help="Filename of the keystore to save trusted certificates to",
+        help="Filename of the Java TrustStore",
     )
     p.add(
         "--truststore-password",
@@ -241,8 +241,8 @@ def parse_args(args):
         "--truststore-certs",
         required=True,
         env_var="CERTGEN_TRUSTSTORE_CERTS",
-        help="Comma-separated list of S3 URIs pointing at certificates to be "
-        "added to the Java TrustStore",
+        help="Comma-separated list of S3 URIs pointing at certificates to use for entries "
+             "in the Java TrustStore",
     )
     p.add(
         "--log-level",
