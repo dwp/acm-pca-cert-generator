@@ -93,8 +93,8 @@ def parse_args(args):
         "--truststore-certs",
         required=True,
         env_var="RETRIEVER_TRUSTSTORE_CERTS",
-        help="Comma-separated list of S3 URIs pointing at certificates to use for entries "
-             "in the Java TrustStore",
+        help="Comma-separated list of S3 URIs pointing at certificates to use for "
+             "entries in the Java TrustStore",
     )
     p.add(
         "--log-level",
