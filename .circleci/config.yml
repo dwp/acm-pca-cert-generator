@@ -61,7 +61,7 @@ jobs:
     - persist_to_workspace:
         root: artifacts
         paths:
-        - acm_pca_cert_generator-*.tar.gz
+        - acm_cert_helper-*.tar.gz
         - VERSION
 
   publish-github-release:

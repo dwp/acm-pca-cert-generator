@@ -1,57 +1,19 @@
 import OpenSSL
-import boto3
 import botocore.session
-import configargparse
-import io
-import jks
-import logging
-import os
 import pytest
 from acm_pca_cert_generator import certgen
-from botocore.stub import Stubber, ANY
-from collections import Counter
+from botocore.stub import Stubber
 
 
-def test_check_key_length_valid():
-    assert certgen.check_key_length("2048") == 2048
-
-
-def test_check_key_length_not_number():
-    with pytest.raises(configargparse.ArgumentTypeError):
-        certgen.check_key_length("test")
-
-
-def test_check_key_length_invalid_choice():
-    with pytest.raises(configargparse.ArgumentTypeError):
-        certgen.check_key_length("1024")
-
-
-def test_check_validity_period_valid():
-    assert certgen.check_validity_period("365d") == "365d"
-    assert certgen.check_validity_period("12m") == "12m"
-    assert certgen.check_validity_period("1y") == "1y"
-
-
-def test_check_validity_period_invalid():
-    with pytest.raises(configargparse.ArgumentTypeError):
-        certgen.check_validity_period("52w")
-
-
-def test_check_subject_cn_not_found():
-    # Tox won't pass HOSTNAME through, so this tests for the case where both the
-    # arg and environment variable are missing
-    with pytest.raises(configargparse.ArgumentTypeError):
-        certgen.check_subject_cn(None)
-
-
-def test_check_subject_cn_blank_cn():
-    with pytest.raises(configargparse.ArgumentTypeError):
-        certgen.check_subject_cn("")
-
-
-def test_check_subject_cn_hostname_available():
-    os.environ["HOSTNAME"] = "myfqdn.example.com"
-    assert certgen.check_subject_cn(None) == "myfqdn.example.com"
+valid_subject_details = {
+    "C": "GB",
+    "ST": "Yorkshire",
+    "L": "Leeds",
+    "O": "MyOrg",
+    "OU": "MyOU",
+    "CN": "myfqdn.example.com",
+    "emailAddress": "joebloggs@example.com",
+}
 
 
 def test_generate_private_key():
@@ -69,17 +31,6 @@ def test_generate_private_key_invalid_type():
 def test_generate_private_key_invalid_length():
     with pytest.raises(TypeError):
         certgen.generate_private_key("RSA", "notanint")
-
-
-valid_subject_details = {
-    "C": "GB",
-    "ST": "Yorkshire",
-    "L": "Leeds",
-    "O": "MyOrg",
-    "OU": "MyOU",
-    "CN": "myfqdn.example.com",
-    "emailAddress": "joebloggs@example.com",
-}
 
 
 def test_generate_csr():
@@ -100,7 +51,7 @@ def test_generate_csr_invalid_subject_details():
     pkey = certgen.generate_private_key("RSA", 2048)
     invalid_subject_details.pop("emailAddress")
     with pytest.raises(KeyError):
-        csr = certgen.generate_csr(pkey, "sha256", invalid_subject_details)
+        certgen.generate_csr(pkey, "sha256", invalid_subject_details)
 
 
 def test_sign_cert():
@@ -109,13 +60,11 @@ def test_sign_cert():
         ca_arn
     )
     key = certgen.generate_private_key("RSA", 2048)
-    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
     csr = certgen.generate_csr(key, "sha256", valid_subject_details)
     signing_algo = "SHA384WITHRSA"
     validity = certgen.create_validity_dict("1d")
 
     acmpca = botocore.session.get_session().create_client("acm-pca")
-    stubber = Stubber(acmpca)
 
     issue_cert_params = {
         "CertificateAuthorityArn": ca_arn,
@@ -152,91 +101,6 @@ def test_sign_cert():
         assert cert_chain == get_cert_response
 
 
-def generate_self_signed_cert(pkey):
-    # Generate CSR
-    x509req = OpenSSL.crypto.X509Req()
-    subject = x509req.get_subject()
-    subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
-    for name_part in subject_name_parts:
-        setattr(subject, name_part, valid_subject_details[name_part])
-    x509req.set_pubkey(pkey)
-    x509req.sign(pkey, "sha256")
-
-    # Generate signed cert
-    cert = OpenSSL.crypto.X509()
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(5 * 365 * 24 * 60 * 60)
-    cert.set_issuer(x509req.get_subject())
-    cert.set_subject(x509req.get_subject())
-    cert.set_pubkey(x509req.get_pubkey())
-    cert.sign(pkey, "sha256")
-
-    return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
-
-
-def test_generate_keystore():
-    certgen.logger.setLevel(logging.DEBUG)
-    keystore_path = "tests/tmp/keystore.jks"
-    keystore_password = "password1"
-    pkey = OpenSSL.crypto.PKey()
-    pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
-    priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
-    cert_pem = generate_self_signed_cert(pkey)
-    certgen.generate_keystore(
-        keystore_path, keystore_password, priv_key, cert_pem, "testalias"
-    )
-
-    ks = jks.KeyStore.load(keystore_path, keystore_password)
-    assert len(ks.private_keys.items()) == 1
-
-
-def test_parse_trusted_cert_arg():
-    trust_aliases = "myca1,myca2"
-    trust_certs = "s3://certbucket/ca1.pem,s3://certbucket/ca2.pem"
-    certs = certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
-    assert len(certs) == 2
-    assert certs[0]["alias"] == "myca1"
-    assert certs[0]["cert"] == "s3://certbucket/ca1.pem"
-    assert certs[1]["alias"] == "myca2"
-    assert certs[1]["cert"] == "s3://certbucket/ca2.pem"
-
-
-def test_parse_trusted_cert_arg_mismatched_lengths():
-    trust_aliases = "myca1,myca2"
-    trust_certs = "s3://certbucket"
-    with pytest.raises(ValueError):
-        certs = certgen.parse_trusted_cert_arg(trust_aliases, trust_certs)
-
-
-def test_generate_truststore():
-    trust_aliases = "myca1,myca2"
-    trust_certs = "s3://certbucket/ca1.pem,s3://certbucket/ca2.pem"
-    truststore_path = "tests/tmp/truststore.jks"
-    truststore_password = "password1"
-    certs = [
-        {"alias": "myca1", "cert": "s3://certbucket/ca1.pem"},
-        {"alias": "myca2", "cert": "s3://certbucket/ca2.pem"},
-    ]
-
-    pkey = OpenSSL.crypto.PKey()
-    pkey.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
-    priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
-    trusted_cert_pem = generate_self_signed_cert(pkey)
-    get_object_params = {"Bucket": "certbucket", "Key": ANY}
-    s3 = botocore.session.get_session().create_client("s3")
-    with Stubber(s3) as stubber:
-        stubber.add_response(
-            "get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params
-        )
-        stubber.add_response(
-            "get_object", {"Body": io.BytesIO(trusted_cert_pem)}, get_object_params
-        )
-        stubber.activate()
-        certgen.generate_truststore(s3, truststore_path, truststore_password, certs)
-        ts = jks.KeyStore.load(truststore_path, truststore_password)
-        assert len(ts.certs) == 2
-
-
 def test_end_to_end():
     key = certgen.generate_private_key("RSA", 2048)
     pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
@@ -264,7 +128,6 @@ def test_end_to_end():
     validity = certgen.create_validity_dict("1d")
 
     acmpca = botocore.session.get_session().create_client("acm-pca")
-    stubber = Stubber(acmpca)
 
     issue_cert_params = {
         "CertificateAuthorityArn": ca_arn,

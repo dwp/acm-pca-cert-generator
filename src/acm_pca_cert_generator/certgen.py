@@ -4,19 +4,16 @@
 import OpenSSL
 import boto3
 import configargparse
-import jks
 import logging
 import os
 import re
 import sys
-
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
+from acm_common import logger_utils, truststore_utils
 
 
 logger = logging.getLogger("certgen")
+subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
+pem_type = OpenSSL.crypto.FILETYPE_PEM
 
 
 def check_key_length(value):
@@ -34,18 +31,18 @@ def check_key_length(value):
     """
     valid_key_lengths = [2048, 4096, 8192]
     try:
-        ivalue = int(value)
+        new_value = int(value)
     except Exception:
         raise configargparse.ArgumentTypeError(
             "{} is an invalid key length. Must be an integer.".format(value)
         )
-    if ivalue not in valid_key_lengths:
+    if new_value not in valid_key_lengths:
         raise configargparse.ArgumentTypeError(
             "{} is an invalid key length. Must be either 2048, 4096 or 8192.".format(
                 value
             )
         )
-    return ivalue
+    return new_value
 
 
 def check_validity_period(value):
@@ -102,25 +99,31 @@ def parse_args(args):
     """
     p = configargparse.ArgParser(
         default_config_files=[
-            "/etc/acm_pca_cert_generator/acm_pca_cert_generator.conf",
-            "~/.config/acm_pca_cert_generator/acm_pca_cert_generator.conf",
+            "/etc/acm_cert_helper/acm_pca_cert_generator.conf",
+            "~/.config/acm_cert_helper/acm_pca_cert_generator.conf",
         ]
     )
 
     p.add(
-        "--key-type", choices=["RSA", "DSA"], required=True, env_var="CERTGEN_KEY_TYPE"
+        "--key-type",
+        choices=["RSA", "DSA"],
+        required=True,
+        env_var="CERTGEN_KEY_TYPE",
+        help="The key type",
     )
     p.add(
         "--key-length",
         type=check_key_length,
         required=True,
         env_var="CERTGEN_KEY_LENGTH",
+        help="The key length in bits",
     )
     p.add(
         "--key-digest-algorithm",
         choices=["sha256", "sha384", "sha512"],
         default="sha384",
         env_var="CERTGEN_KEY_DIGEST",
+        help="The key digest algorithm",
     )
     p.add(
         "--subject-c",
@@ -165,8 +168,12 @@ def parse_args(args):
         env_var="CERTGEN_SUBJECT_EMAILADDRESS",
         help="Certificate subject email address",
     )
-
-    p.add("--ca-arn", required=True, env_var="CERTGEN_CA_ARN", help="ACM PCA ARN")
+    p.add(
+        "--ca-arn",
+        required=True,
+        env_var="CERTGEN_CA_ARN",
+        help="ACM PCA ARN"
+    )
     p.add(
         "--signing-algorithm",
         choices=[
@@ -193,7 +200,7 @@ def parse_args(args):
         "--keystore-path",
         required=True,
         env_var="CERTGEN_KEYSTORE_PATH",
-        help="Filename of the keystore to save the signed keypair to",
+        help="Filename for the Java Keystore",
     )
     p.add(
         "--keystore-password",
@@ -210,13 +217,13 @@ def parse_args(args):
     p.add(
         "--private-key-password",
         env_var="CERTGEN_PRIVATE_KEY_PASSWORD",
-        help="The password used to protect ",
+        help="The password used to protect the private key in the Java KeyStore",
     )
     p.add(
         "--truststore-path",
         required=True,
         env_var="CERTGEN_TRUSTSTORE_PATH",
-        help="Filename of the keystore to save trusted certificates to",
+        help="Filename of the Java TrustStore",
     )
     p.add(
         "--truststore-password",
@@ -234,14 +241,15 @@ def parse_args(args):
         "--truststore-certs",
         required=True,
         env_var="CERTGEN_TRUSTSTORE_CERTS",
-        help="Comma-separated list of S3 URIs pointing at certificates to be "
-        "added to the Java TrustStore",
+        help="Comma-separated list of S3 URIs pointing at certificates to use for "
+             "entries in the Java TrustStore",
     )
     p.add(
         "--log-level",
         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
         default="INFO",
         env_var="CERTGEN_LOG_LEVEL",
+        help="Logging level",
     )
 
     return p.parse_args(args)
@@ -269,7 +277,9 @@ def generate_private_key(key_type, key_bits):
             "Invalid value for key_type. Only 'RSA' and 'DSA' are supported."
         )
     key.generate_key(openssl_key_type, key_bits)
-    return OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    private_key = OpenSSL.crypto.dump_privatekey(pem_type, key)
+    logger.info("Private key generated")
+    return private_key
 
 
 def generate_csr(key, digest, subject_details):
@@ -293,14 +303,16 @@ def generate_csr(key, digest, subject_details):
     csr = OpenSSL.crypto.X509Req()
     subject = csr.get_subject()
 
-    subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
     for name_part in subject_name_parts:
         setattr(subject, name_part, subject_details[name_part])
 
-    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+    pkey = OpenSSL.crypto.load_privatekey(pem_type, key)
     csr.set_pubkey(pkey)
     csr.sign(pkey, digest)
-    return OpenSSL.crypto.dump_certificate_request(OpenSSL.crypto.FILETYPE_PEM, csr)
+
+    signing_result = OpenSSL.crypto.dump_certificate_request(pem_type, csr)
+    logger.info("Certificate Signing Request done")
+    return signing_result
 
 
 def create_validity_dict(validity_period):
@@ -352,166 +364,43 @@ def sign_cert(acmpca_client, ca_arn, csr, signing_algo, validity_period):
     waiter.wait(CertificateAuthorityArn=ca_arn, CertificateArn=cert_arn)
 
     logger.info("Retrieving signed cert from ACM PCA")
-    return acmpca_client.get_certificate(
+    aws_result = acmpca_client.get_certificate(
         CertificateAuthorityArn=ca_arn, CertificateArn=cert_arn
     )
+    logger.info("Cert signing done by ACM PCA")
+    return aws_result
 
 
-def generate_keystore(
-    keystore_path, keystore_password, priv_key, cert, alias, priv_key_password=None
-):
-    """Generate a Java KeyStore.
-
-    Args:
-        keystore_path (str): The path at which to save the keystore
-        keystore_password (str): The password to protect the keystore with
-        priv_key (str): The base64 PEM-encoded private key to store
-        cert (str): The base64 PEM-encoded certificate signed by ACM PCA
-        alias (str): The alias under which to store the key pair
-        priv_key_password (str): The password to protect the private key with
-
-    """
-    logger.info("Generating Java KeyStore")
-    pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, priv_key)
-    dumped_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pkey)
-
-    x509_cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
-    dumped_cert = OpenSSL.crypto.dump_certificate(
-        OpenSSL.crypto.FILETYPE_ASN1, x509_cert
-    )
-
-    pke = jks.PrivateKeyEntry.new(alias, [dumped_cert], dumped_key, "rsa_raw")
-
-    if priv_key_password:
-        pke.encrypt(priv_key_password)
-
-    keystore = jks.KeyStore.new("jks", [pke])
-    try:
-        newdir = os.path.dirname(keystore_path)
-        os.makedirs(newdir)
-    except OSError:
-        # Raise only if the directory doesn't already exist
-        if not os.path.isdir(newdir):
-            raise
-    keystore.save(keystore_path, keystore_password)
-
-
-def parse_s3_url(url):
-    """Extract the S3 bucket name and key from a given S3 URL.
+def gather_subjects(args):
+    """Create a dictionary of the subjects for the CSR.
 
     Args:
-        url (str): The S3 URL to parse
+        args (Object): The parsed arguments
 
     Returns:
-        dict: A {"bucket": "string", "key": "string"} dict representing the
-              S3 object identified by the given URL
+        subject_details (Dict): The gathered subjects
 
     """
-    parsed_url = urlparse(url)
-    if parsed_url.scheme != "s3":
-        raise ValueError("S3 URLs must start with 's3://'")
-
-    bucket = parsed_url.netloc.split(".")[0]
-    key = parsed_url.path.lstrip("/")
-
-    return {"bucket": bucket, "key": key}
-
-
-def generate_truststore(s3_client, truststore_path, truststore_password, certs):
-    """Generate a Java TrustStore.
-
-    Args:
-        truststore_path (str): The path at which to save the truststore
-        truststore_password (str): The password to protect the truststore with
-        certs (list): A list of dicts containing aliases and certificate paths
-                      for SSL certs to add to the truststore, e.g.:
-                      [{"alias": "testcert", "cert": "/tmp/mycert.pem"}]
-
-    """
-    logger.info("Generating Java TrustStore")
-    trusted_certs = []
-    for cert_entry in certs:
-        alias = cert_entry["alias"]
-        cert = parse_s3_url(cert_entry["cert"])
-        pem_cert = s3_client.get_object(Bucket=cert["bucket"], Key=cert["key"])
-        x509_cert = OpenSSL.crypto.load_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, pem_cert["Body"].read().decode("utf-8")
-        )
-        asn_cert = OpenSSL.crypto.dump_certificate(
-            OpenSSL.crypto.FILETYPE_ASN1, x509_cert
-        )
-        trusted_certs.append(jks.TrustedCertEntry.new(alias, asn_cert))
-
-    try:
-        newdir = os.path.dirname(truststore_path)
-        os.makedirs(newdir)
-    except OSError:
-        # Raise only if the directory doesn't already exist
-        if not os.path.isdir(newdir):
-            raise
-    keystore = jks.KeyStore.new("jks", trusted_certs)
-    keystore.save(truststore_path, truststore_password)
-
-
-def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs):
-    """Split the CLI arguments for trusted cert aliases and paths.
-
-    Args:
-        trusted_cert_aliases (str): comma-separated list of certificate aliases
-                                    to add to the truststore
-        trusted_certs (str): comma-separated list of certificates (paths) to add
-                             to the truststore
-
-    Returns:
-        list of dicts: A list of {"alias": "string", "cert": "string"} dicts
-                       containing a mapping of alias name to certifificate path
-                       for trusted certificates
-
-    Raises:
-        ValueError: If the number of trusted_cert_aliases and trusted_certs don't match
-
-    """
-    aliases = trusted_cert_aliases.split(",")
-    cert_paths = trusted_certs.split(",")
-    if len(aliases) != len(cert_paths):
-        raise ValueError(
-            "The number of trusted certificate aliases ({}) and trusted "
-            "certificates ({}) don't match".format(len(aliases), len(cert_paths))
-        )
-    certs = []
-    i = 0
-    for alias in aliases:
-        cert = {"alias": alias, "cert": cert_paths[i]}
-        certs.append(cert)
-        i += 1
-    return certs
-
-
-def _setup_logging(log_level):
-    level = logging.getLevelName(log_level)
-    logger.setLevel(level)
-    boto3.set_stream_logger("", level)
-    logger.info("Logging level set to {}".format(log_level))
+    subject_details = {}
+    for name_part in subject_name_parts:
+        name = "subject_{}".format(name_part.lower())
+        subject_details[name_part] = getattr(args, name)
 
 
 def _main(args):
     args = parse_args(args)
-    _setup_logging(args.log_level)
+    logger_utils.setup_logging(logger, args.log_level)
     key = generate_private_key(args.key_type, args.key_length)
 
-    subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
-    subject_details = {}
-    for name_part in subject_name_parts:
-        arg = "subject_{}".format(name_part.lower())
-        subject_details[name_part] = getattr(args, arg)
-
+    subject_details = gather_subjects(args)
     csr = generate_csr(key, args.key_digest_algorithm, subject_details)
 
     acmpca_client = boto3.client("acm-pca")
     cert_and_chain = sign_cert(
         acmpca_client, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
-    generate_keystore(
+
+    truststore_utils.generate_keystore(
         args.keystore_path,
         args.keystore_password,
         key,
@@ -520,7 +409,7 @@ def _main(args):
         args.private_key_password,
     )
 
-    trusted_certs = parse_trusted_cert_arg(
+    trusted_certs = truststore_utils.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
 
@@ -529,7 +418,7 @@ def _main(args):
     #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
 
     s3_client = boto3.client("s3")
-    generate_truststore(
+    truststore_utils.generate_truststore(
         s3_client, args.truststore_path, args.truststore_password, trusted_certs
     )
 

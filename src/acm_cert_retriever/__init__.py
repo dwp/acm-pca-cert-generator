@@ -1,6 +1,6 @@
-"""ACM PCA Certificate Generator.
+"""ACM Certificate Retriever.
 
-Creates a new local key and csr, and has that signed by ACM-PCA.
+Fetches a remote key and cert from ACM.
 Then, adds the key and signed cert to a local Keystore and Truststore.
 Also adds configured remote S3 certs to the Truststore.
 
