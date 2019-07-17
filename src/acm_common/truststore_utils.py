@@ -28,7 +28,7 @@ def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs_s3_urls):
     Returns:
         list of dicts: A list of {"alias": "string", "cert": "string"} dicts
                        containing a mapping of alias name to certificate path
-                       for trusted certificates, i.e.
+                       for trusted certificates, e.g.
                        [
                         {"alias": "a1", "cert": "c1", "source": "s3"},
                         {"alias": "a2", "cert": "c2", "source": "s3"},
@@ -98,7 +98,7 @@ def parse_s3_url(url):
     """Extract the S3 bucket name and key from a given S3 URL.
 
     Args:
-        url (str): The S3 URL to parse i.e. s3://bucket/folder/file.txt
+        url (str): The S3 URL to parse e.g. s3://bucket/folder/file.txt
 
     Returns:
         dict: A {"bucket": "string", "key": "string"} dict representing the
@@ -119,7 +119,7 @@ def fetch_cert(source, entry, s3_client):
     """Fetch a cert for s3 or use text in memory.
 
     Args:
-        source (String): A valid source, i.e. s3 or memory
+        source (String): A valid source, e.g. s3 or memory
         entry (String): The s3 url, or the plain text
         s3_client (Object): The aws utils to use
 
