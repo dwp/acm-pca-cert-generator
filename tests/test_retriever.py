@@ -21,7 +21,7 @@ def make_tuple(some_args_dict):
 sample_args = {
     "acm_cert_arn": "my-cert-arn",
     "acm_key_passphrase": "my-key-passphrase",
-    "add_downloaded_chain_to_truststore": "true",
+    "add_downloaded_chain_to_truststore": "yes",
     "keystore_path": "my-keystore-path",
     "keystore_password": "my-keystore-password",
     "private_key_alias": "my-key-alias",

@@ -34,7 +34,7 @@ which are mandatory. Alternatively, the same information can be specified using 
 
 ## Cleaning outputs locally
 
-Running the following will remove all the local files created by tox, incase you need to tidy up:
+Running the following will remove all the local files created by tox, in case you need to tidy up:
 
 ```
 rm -rf build dist .tox

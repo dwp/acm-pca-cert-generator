@@ -42,11 +42,11 @@ def parse_args(args):
     )
     p.add(
         "--add-downloaded-chain-to-truststore",
-        choices=["true", "false"],
-        default="false",
+        action="store_true",
         env_var="RETRIEVER_ADD_DOWNLOADED_CHAIN",
         help="Whether or not to add the downloaded cert chain from the ARN "
-             "to the trust store",
+             "to the trust store. Allowed missing, 'true', 'false', 'yes', 'no', "
+             "'1' or '0'",
     )
     p.add(
         "--keystore-path",
@@ -173,7 +173,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     )
 
     # When we know whether or not to add our own ACM chain, we'd do something like this:
-    if args.add_downloaded_chain_to_truststore == "true":
+    if args.add_downloaded_chain_to_truststore:
         trusted_certs.append({
             "alias": "aws-cert-chain",
             "cert": cert_and_key_data["CertificateChain"],

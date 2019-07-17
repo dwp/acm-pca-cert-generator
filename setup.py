@@ -3,7 +3,7 @@
 import setuptools
 
 with open("README.md", "r") as fh:
-    long_description = fh.read()
+    full_description = fh.read()
 
 setuptools.setup(
     name="acm_cert_helper",
@@ -12,7 +12,7 @@ setuptools.setup(
     author_email="dataworks@digital.uc.dwp.gov.uk",
     description="Creates a local Keystore and Truststore by generating a cert "
                 "using ACM PCA or fetching a key and cert using ACM.",
-    long_description=long_description,
+    long_description=full_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dwp/acm-cert-helper",
     entry_points={
