@@ -110,8 +110,6 @@ def parse_args(args):
 def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
     """Download a key and certificate and certificate chain form ACM.
 
-    Also creates a Truststore with files from S3.
-
     Args:
         acm_util (Object): The boto3 utility to use
         rsa_util (Object): The Crypto RSA utility to use
@@ -119,18 +117,27 @@ def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
         acm_key_passphrase (String): temporary password to use for key encryption
 
     Returns:
-        all_data (Dict): THe json result, with the key encrypted by the passphrase
+        Dict: The json result, with the key decrypted
+
+    Raises:
+        Error: If the export request fails
 
     """
-    logger.info("Retrieving cert and key from AWS")
-    all_data = acm_util.export_certificate(
-        CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase)
+    logger.info("Retrieving cert and key from AWS...")
+    try:
+        all_data = acm_util.export_certificate(
+            CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase)
+    except Exception as e:
+        logger.exception("Failed to fetch {}: Error = {}".format(acm_cert_arn, e))
+        raise e
+    else:
+        logger.info("...cert and key exported from AWS")
 
     encrypted_key = rsa_util.import_key(all_data['PrivateKey'], acm_key_passphrase)
     decrypted_key = encrypted_key.export_key()
     all_data['PrivateKey'] = decrypted_key
 
-    logger.info("Retrieved cert and key from AWS")
+    logger.info("Retrieved cert and key from AWS and decrypted the key")
     return all_data
 
 
@@ -147,7 +154,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
         truststore_util (Object): The utility package to pass the data to
 
     Returns:
-        all_data (Dict): The json result, with the key in plain text
+        Dict: The json result, with the key in plain text
 
     """
     logger.info("Creating KeyStore and TrustStore")
