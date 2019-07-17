@@ -18,7 +18,7 @@ def make_tuple(some_args_dict):
     return namedtuple("DummyParsedArgs", some_args_dict.keys())(*some_args_dict.values())
 
 
-sample_args = {
+template_args = {
     "acm_cert_arn": "my-cert-arn",
     "acm_key_passphrase": "my-key-passphrase",
     "add_downloaded_chain_to_truststore": "yes",
@@ -33,7 +33,7 @@ sample_args = {
     "log_level": "ANY"
 }
 
-downloaded_data = {
+template_downloaded_data = {
     'Certificate': 'downloaded-cert',
     'CertificateChain': 'downloaded-chain',
     'PrivateKey': 'downloaded-encrypted-key'
@@ -72,10 +72,8 @@ class TestRetriever(unittest.TestCase):
         """
 
         # Given
-        bad_sample_args = {
-            "acm_cert_arn": "bad-arn",
-            "acm_key_passphrase": "my-key-passphrase"
-        }
+        bad_sample_args = copy.deepcopy(template_args)
+        bad_sample_args["acm_cert_arn"] = "bad-arn"
         bad_args = make_tuple(bad_sample_args)
 
         acm_client = MagicMock()
@@ -120,11 +118,11 @@ class TestRetriever(unittest.TestCase):
     ):
 
         # Given
-        dummy_args = make_tuple(sample_args)
+        dummy_args = make_tuple(copy.deepcopy(template_args))
 
         acm_client = MagicMock()
         acm_client.export_certificate = MagicMock()
-        acm_client.export_certificate.return_value = downloaded_data
+        acm_client.export_certificate.return_value = copy.deepcopy(template_downloaded_data)
 
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
@@ -182,15 +180,13 @@ class TestRetriever(unittest.TestCase):
     ):
 
         # Given
-
-        # Given
-        no_download = copy.copy(sample_args)
+        no_download = copy.deepcopy(template_args)
         no_download["add_downloaded_chain_to_truststore"] = "no"
         no_download_args = make_tuple(no_download)
 
         acm_client = MagicMock()
         acm_client.export_certificate = MagicMock()
-        acm_client.export_certificate.return_value = downloaded_data
+        acm_client.export_certificate.return_value = copy.deepcopy(template_downloaded_data)
 
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
