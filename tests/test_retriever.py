@@ -104,7 +104,7 @@ class TestRetriever(unittest.TestCase):
         mocked_logger.exception.assert_called_with('Failed to fetch bad-arn: Error = Bad ARN!')
         acm_client.export_certificate.assert_called_once_with(
             CertificateArn='bad-arn', Passphrase='my-key-passphrase')
-        
+
         rsa_util.import_key.assert_not_called()
         mocked_generate_keystore.assert_not_called()
         mocked_parse_trusted_cert_arg.assert_not_called()
