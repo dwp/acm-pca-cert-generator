@@ -378,13 +378,15 @@ def gather_subjects(args):
         args (Object): The parsed arguments
 
     Returns:
-        subject_details (Dict): The gathered subjects
+        Dict: The gathered subjects
 
     """
     subject_details = {}
     for name_part in subject_name_parts:
         name = "subject_{}".format(name_part.lower())
         subject_details[name_part] = getattr(args, name)
+
+    return subject_details
 
 
 def _main(args):

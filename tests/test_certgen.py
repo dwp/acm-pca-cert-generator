@@ -1,9 +1,9 @@
 import OpenSSL
 import botocore.session
 import pytest
+from collections import namedtuple
 from acm_pca_cert_generator import certgen
 from botocore.stub import Stubber
-
 
 valid_subject_details = {
     "C": "GB",
@@ -14,6 +14,30 @@ valid_subject_details = {
     "CN": "myfqdn.example.com",
     "emailAddress": "joebloggs@example.com",
 }
+
+
+def make_tuple(some_args_dict):
+    return namedtuple("DummyParsedArgs", some_args_dict.keys())(*some_args_dict.values())
+
+
+subject_args = {
+    "subject_c": "city",
+    "subject_st": "s",
+    "subject_l": "l",
+    "subject_o": "o",
+    "subject_ou": "ou",
+    "subject_cn": "cn",
+    "subject_emailaddress": "email"
+}
+
+
+def test_gather_subjects():
+    sample_args = make_tuple(subject_args)
+    result = certgen.gather_subjects(sample_args)
+    assert result == {
+        'C': 'city', 'CN': 'cn', 'L': 'l', 'O': 'o', 'OU': 'ou', 'ST': 's',
+        'emailAddress': 'email'
+    }
 
 
 def test_generate_private_key():
