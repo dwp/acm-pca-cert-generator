@@ -389,7 +389,7 @@ def gather_subjects(args):
     return subject_details
 
 
-def generate_cert_and_make_stores(acmpca_util, s3_util, truststore_util, args):
+def generate_key_and_cert(acmpca_util, s3_util, truststore_util, args):
     """Generate a key and cert in ACM PCA, then the stores.
 
     Args:
@@ -431,7 +431,7 @@ def _main(args):
 
     acmpca_client = boto3.client("acm-pca")
     s3_client = boto3.client("s3")
-    generate_cert_and_make_stores(acmpca_client, s3_client, truststore_utils, args)
+    generate_key_and_cert(acmpca_client, s3_client, truststore_utils, args)
 
 
 def main():
