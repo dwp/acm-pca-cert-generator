@@ -389,20 +389,25 @@ def gather_subjects(args):
     return subject_details
 
 
-def _main(args):
-    args = parse_args(args)
-    logger_utils.setup_logging(logger, args.log_level)
+def generate_cert_and_make_stores(acmpca_util, s3_util, truststore_util, args):
+    """Generate a key and cert in ACM PCA, then the stores.
+
+    Args:
+        acmpca_util (Object): The boto3 utility to use
+        s3_util (Object): The boto3 utility to use
+        truststore_util (Object): The utility package to pass the data to
+        args (Object): The parsed command line arguments
+    """
     key = generate_private_key(args.key_type, args.key_length)
 
     subject_details = gather_subjects(args)
     csr = generate_csr(key, args.key_digest_algorithm, subject_details)
 
-    acmpca_client = boto3.client("acm-pca")
     cert_and_chain = sign_cert(
-        acmpca_client, args.ca_arn, csr, args.signing_algorithm, args.validity_period
+        acmpca_util, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
 
-    truststore_utils.generate_keystore(
+    truststore_util.generate_keystore(
         args.keystore_path,
         args.keystore_password,
         key,
@@ -411,18 +416,22 @@ def _main(args):
         args.private_key_password,
     )
 
-    trusted_certs = truststore_utils.parse_trusted_cert_arg(
+    trusted_certs = truststore_util.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
 
-    # When we know whether or not to add the ACM chain, we'd do something like this
-    # trusted_certs.add (
-    #   {"alias": "aws-cert", "cert": cert_and_chain["CertificateChain"] } )
-
-    s3_client = boto3.client("s3")
-    truststore_utils.generate_truststore(
-        s3_client, args.truststore_path, args.truststore_password, trusted_certs
+    truststore_util.generate_truststore(
+        s3_util, args.truststore_path, args.truststore_password, trusted_certs
     )
+
+
+def _main(args):
+    args = parse_args(args)
+    logger_utils.setup_logging(logger, args.log_level)
+
+    acmpca_client = boto3.client("acm-pca")
+    s3_client = boto3.client("s3")
+    generate_cert_and_make_stores(acmpca_client, s3_client, truststore_utils, args)
 
 
 def main():
