@@ -45,10 +45,10 @@ def test_gather_subjects():
     sample_args = make_tuple(subject_args)
     result = certgen.gather_subjects(sample_args)
     assert result == {
-            'C': 'country', 'CN': 'host', 'L': 'city',
-            'O': 'organisation', 'OU': 'org', 'ST': 'state',
-            'emailAddress': 'email'
-        }
+        'C': 'country', 'CN': 'host', 'L': 'city',
+        'O': 'organisation', 'OU': 'org', 'ST': 'state',
+        'emailAddress': 'email'
+    }
 
 
 def test_generate_private_key():
