@@ -5,6 +5,16 @@ from collections import namedtuple
 from acm_pca_cert_generator import certgen
 from botocore.stub import Stubber
 
+try:
+    import mock
+    from mock import MagicMock
+    from mock import call
+except ImportError:
+    from unittest import mock
+    from unittest.mock import MagicMock
+    from unittest.mock import call
+
+
 valid_subject_details = {
     "C": "GB",
     "ST": "Yorkshire",
@@ -21,12 +31,12 @@ def make_tuple(some_args_dict):
 
 
 subject_args = {
-    "subject_c": "city",
-    "subject_st": "s",
-    "subject_l": "l",
-    "subject_o": "o",
-    "subject_ou": "ou",
-    "subject_cn": "cn",
+    "subject_c": "country",
+    "subject_st": "state",
+    "subject_l": "city",
+    "subject_o": "organisation",
+    "subject_ou": "org",
+    "subject_cn": "host",
     "subject_emailaddress": "email"
 }
 
@@ -35,7 +45,8 @@ def test_gather_subjects():
     sample_args = make_tuple(subject_args)
     result = certgen.gather_subjects(sample_args)
     assert result == {
-        'C': 'city', 'CN': 'cn', 'L': 'l', 'O': 'o', 'OU': 'ou', 'ST': 's',
+        'C': 'country', 'CN': 'host', 'L': 'city',
+        'O': 'organisation', 'OU': 'org', 'ST': 'state',
         'emailAddress': 'email'
     }
 
@@ -65,6 +76,7 @@ def test_generate_csr():
     name = x509req.get_subject().get_components()
 
     # Check that the subject details match
+
     assert len(name) == len(valid_subject_details.items())
     # Check that the CSR was signed with the right key
     assert x509req.verify(pkey)
@@ -78,7 +90,7 @@ def test_generate_csr_invalid_subject_details():
         certgen.generate_csr(pkey, "sha256", invalid_subject_details)
 
 
-def test_sign_cert():
+def test_sign_cert_happy_case():
     ca_arn = "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/506a130d-8519-45dc-903d-2a30709d6a33"
     stub_cert_arn = "{}/certificate/286535153982981100925020015808220737245".format(
         ca_arn
@@ -125,7 +137,7 @@ def test_sign_cert():
         assert cert_chain == get_cert_response
 
 
-def test_end_to_end():
+def test_sign_cert_end_to_end():
     key = certgen.generate_private_key("RSA", 2048)
     pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
 
