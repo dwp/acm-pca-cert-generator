@@ -389,21 +389,27 @@ def gather_subjects(args):
     return subject_details
 
 
-def generate_key_and_cert(acmpca_util, s3_util, truststore_util, args):
+def generate_key_and_cert(
+        acmpca_util, s3_util, truststore_util, args,
+        fn_generate_private_key, fn_generate_csr, fn_sign_cert
+):
     """Generate a key and cert in ACM PCA, then the stores.
 
     Args:
         acmpca_util (Object): The boto3 utility to use
         s3_util (Object): The boto3 utility to use
         truststore_util (Object): The utility package to pass the data to
-        args (Object): The parsed command line arguments
+        args (Object): The parsed command line arguments,
+        fn_generate_private_key (Function): Function pointer,
+        fn_generate_csr (Function): Function pointer,
+        fn_sign_cert (Function): Function pointer
     """
-    key = generate_private_key(args.key_type, args.key_length)
+    key = fn_generate_private_key(args.key_type, args.key_length)
 
     subject_details = gather_subjects(args)
-    csr = generate_csr(key, args.key_digest_algorithm, subject_details)
+    csr = fn_generate_csr(key, args.key_digest_algorithm, subject_details)
 
-    cert_and_chain = sign_cert(
+    cert_and_chain = fn_sign_cert(
         acmpca_util, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
 
@@ -431,7 +437,8 @@ def _main(args):
 
     acmpca_client = boto3.client("acm-pca")
     s3_client = boto3.client("s3")
-    generate_key_and_cert(acmpca_client, s3_client, truststore_utils, args)
+    generate_key_and_cert(acmpca_client, s3_client, truststore_utils, args,
+                          generate_private_key, generate_csr, sign_cert)
 
 
 def main():
