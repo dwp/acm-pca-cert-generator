@@ -104,10 +104,10 @@ class TestCertGen(unittest.TestCase):
             mock_private_key,
             "my-digest-algorithm",
             {
-                'C': 'my-country', 'CN': 'my-host', 'L': 'my-city',
-                'O': 'my-organisation', 'my-OU': 'my-org', 'my-ST': 'my-state',
-                'emailAddress': 'my-email'
-            })
+                'C': 'my-country', 'ST': 'my-state', 'L': 'my-city', 'O': 'my-organisation',
+                'OU': 'my-org', 'CN': 'my-host', 'emailAddress': 'my-email'
+            }
+        )
 
         mock_sign_cert.assert_called_once_with(
             acmpca_client, "my-ca-arn", mock_csr,
