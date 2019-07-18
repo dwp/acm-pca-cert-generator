@@ -5,13 +5,9 @@ from acm_pca_cert_generator import certgen
 try:
     import mock
     from mock import MagicMock
-    from mock import call
-    from mock import create_autospec
 except ImportError:
     from unittest import mock
     from unittest.mock import MagicMock
-    from unittest.mock import call
-    from unittest.mock import create_autospec
 
 
 valid_subject_details = {
