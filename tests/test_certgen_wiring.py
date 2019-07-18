@@ -90,6 +90,7 @@ class TestCertGen(unittest.TestCase):
         mock_generate_csr.return_value = mock_csr
 
         mock_sign_cert = MagicMock()
+        mock_sign_cert.return_value = created_cert_data
 
         # When
         certgen.generate_key_and_cert(
@@ -113,10 +114,10 @@ class TestCertGen(unittest.TestCase):
             acmpca_client, "my-ca-arn", mock_csr,
             "my-signing-algorithm", "my-validity-period")
 
-        mock_truststore_utils.generate_truststore.assert_called_once_with(
+        mock_truststore_utils.generate_keystore.assert_called_once_with(
             "my-keystore-path",
             "my-keystore-password",
-            'created-key',
+            mock_private_key,
             'created-cert',
             "my-key-alias",
             "my-key-password"
