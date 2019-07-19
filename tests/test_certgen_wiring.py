@@ -12,8 +12,8 @@ except ImportError:
 
 valid_subject_details = {
     "C": "GB",
-    "ST": "Yorkshire",
-    "L": "Leeds",
+    "ST": "MyCounty",
+    "L": "MyCity",
     "O": "MyOrg",
     "OU": "MyOU",
     "CN": "myfqdn.example.com",
