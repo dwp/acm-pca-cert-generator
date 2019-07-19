@@ -12,9 +12,9 @@ valid_args = [
     "--subject-c",
     "GB",
     "--subject-st",
-    "Yorkshire",
+    "MyCounty",
     "--subject-l",
-    "Leeds",
+    "MyCity",
     "--subject-o",
     "DWP",
     "--subject-ou",
@@ -216,11 +216,11 @@ def test_parse_args_missing_key_subject_c():
 
 
 def test_parse_args_missing_subect_st():
-    missing_arg_test(["--subject-st", "Yorkshire"])
+    missing_arg_test(["--subject-st", "MyCounty"])
 
 
 def test_parse_args_missing_subject_l():
-    missing_arg_test(["--subject-l", "Leeds"])
+    missing_arg_test(["--subject-l", "MyCity"])
 
 
 def test_parse_args_missing_subject_o():
