@@ -43,11 +43,6 @@ dummy_certs_data = [
     {"alias": "a1", "cert": "c1", "source": "s1"}
 ]
 
-dummy_certs_data_extended = copy.copy(dummy_certs_data)
-dummy_certs_data_extended.append(
-    {"alias": "aws-cert-chain", "cert": 'downloaded-chain', "source": "memory"}
-)
-
 
 class TestRetriever(unittest.TestCase):
 
@@ -166,7 +161,7 @@ class TestRetriever(unittest.TestCase):
             s3_client,
             "my-truststore-path",
             "my-truststore-password",
-            dummy_certs_data_extended
+            dummy_certs_data
         )
 
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
