@@ -134,10 +134,6 @@ def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
     else:
         logger.info("...cert and key exported from AWS")
 
-    print("====all_data========")
-    print(all_data)
-    print("============")
-
     encrypted_key = rsa_util.import_key(all_data['PrivateKey'], acm_key_passphrase)
     decrypted_key = encrypted_key.export_key()
     all_data['PrivateKey'] = decrypted_key
@@ -165,7 +161,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     logger.info("Creating KeyStore and TrustStore")
 
     keystore_cert = cert_and_key_data['Certificate']
-    keystore_cert_list = [ keystore_cert ]
+    keystore_cert_list = [keystore_cert]
     if args.add_downloaded_chain_to_keystore:
         keystore_cert_list.append(cert_and_key_data['CertificateChain'])
 

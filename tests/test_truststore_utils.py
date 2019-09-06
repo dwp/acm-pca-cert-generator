@@ -23,14 +23,17 @@ valid_subject_details = {
 def test_get_aws_certificate_chain():
     template_downloaded_data = {
         'Certificate': '-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----',
-        'CertificateChain': '-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nCERT2\n-----END CERTIFICATE-----',
+        'CertificateChain': '-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----\n'
+                            '-----BEGIN CERTIFICATE-----\nCERT2\n-----END CERTIFICATE-----\n'
+                            '-----BEGIN CERTIFICATE-----\nCERT3\n-----END CERTIFICATE-----',
         'PrivateKey': '-----BEGIN ENCRYPTED PRIVATE KEY-----\nKEY\n-----END ENCRYPTED PRIVATE KEY-----'
     }
     actual_chain = truststore_utils.get_aws_certificate_chain(template_downloaded_data)
-    assert len(actual_chain) == 3
+    assert len(actual_chain) == 4
     assert actual_chain[0] == "-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----"
-    assert actual_chain[1] == "-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE------"
+    assert actual_chain[1] == "-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----"
     assert actual_chain[2] == "-----BEGIN CERTIFICATE-----\nCERT2\n-----END CERTIFICATE-----"
+    assert actual_chain[3] == "-----BEGIN CERTIFICATE-----\nCERT2\n-----END CERTIFICATE-----"
 
 
 def test_parse_trusted_cert_arg():

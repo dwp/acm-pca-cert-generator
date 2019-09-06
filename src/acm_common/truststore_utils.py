@@ -17,7 +17,19 @@ logger = logging.getLogger("truststore")
 
 
 def get_aws_certificate_chain(all_aws_data):
-    return ["TODO","TODO"]
+    """Make a certificate chain in order.
+
+    Args:
+        all_aws_data (json): the results of the Retrieve call
+
+    Returns:
+        list: A list of base 64 encoded certs in order
+
+    """
+    downloaded_cert = all_aws_data['Certificate']
+    cert_chain = [downloaded_cert]
+    cert_chain.append("FAIL")
+    return cert_chain
 
 
 def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs_s3_urls):
@@ -67,7 +79,8 @@ def generate_keystore(
         keystore_path (str): The path at which to save the keystore
         keystore_password (str): The password to protect the keystore with
         priv_key (str): The base64 PEM-encoded private key to store
-        cert_list (List of str): A list of base64 PEM-encoded certificates signed by ACM PCA.
+        cert_list (List of str): A list of base64 PEM-encoded certificates
+            signed by ACM PCA.
             Multiple certificates should represent the chain in the right order.
         alias (str): The alias under which to store the key pair
         priv_key_password (str): The password to protect the private key with
