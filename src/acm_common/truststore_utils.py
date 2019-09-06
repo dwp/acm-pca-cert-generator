@@ -16,6 +16,10 @@ except ImportError:
 logger = logging.getLogger("truststore")
 
 
+def get_aws_certificate_chain(all_aws_data):
+    return ["TODO","TODO"]
+
+
 def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs_s3_urls):
     """Split the CLI arguments for trusted cert aliases and paths.
 
@@ -55,7 +59,7 @@ def parse_trusted_cert_arg(trusted_cert_aliases, trusted_certs_s3_urls):
 
 
 def generate_keystore(
-    keystore_path, keystore_password, priv_key, cert, alias, priv_key_password=None
+    keystore_path, keystore_password, priv_key, cert_list, alias, priv_key_password=None
 ):
     """Generate a Java KeyStore.
 
@@ -63,7 +67,8 @@ def generate_keystore(
         keystore_path (str): The path at which to save the keystore
         keystore_password (str): The password to protect the keystore with
         priv_key (str): The base64 PEM-encoded private key to store
-        cert (str): The base64 PEM-encoded certificate signed by ACM PCA
+        cert_list (List of str): A list of base64 PEM-encoded certificates signed by ACM PCA.
+            Multiple certificates should represent the chain in the right order.
         alias (str): The alias under which to store the key pair
         priv_key_password (str): The password to protect the private key with
 
@@ -72,12 +77,15 @@ def generate_keystore(
     key_pem = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, priv_key)
     dumped_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, key_pem)
 
-    x509_cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
-    dumped_cert = OpenSSL.crypto.dump_certificate(
-        OpenSSL.crypto.FILETYPE_ASN1, x509_cert
-    )
+    dumped_cert_list = []
+    for cert in cert_list:
+        x509_cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+        dumped_cert = OpenSSL.crypto.dump_certificate(
+            OpenSSL.crypto.FILETYPE_ASN1, x509_cert
+        )
+        dumped_cert_list.append(dumped_cert)
 
-    pke = jks.PrivateKeyEntry.new(alias, [dumped_cert], dumped_key, "rsa_raw")
+    pke = jks.PrivateKeyEntry.new(alias, dumped_cert_list, dumped_key, "rsa_raw")
 
     if priv_key_password:
         pke.encrypt(priv_key_password)

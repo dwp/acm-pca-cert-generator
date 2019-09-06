@@ -148,8 +148,8 @@ acm-pca-cert-generator \
 --subject-emailaddress "me@example.com" \
 --ca-arn "arn:aws:acm-pca:us-east-1:012345678901:certificate-authority/123a456b-7890-12cd-345e-6f78901f2a34" \
 --signing-algorithm "SHA384WITHRSA" --validity-period=1d \
---keystore-path /tmp/keystore.jks --keystore-password P4ssw0rd1 \
---private-key-alias mykey --truststore-path /tmp/truststore.jks \
---truststore-password P4ssw0rd2 --truststore-aliases ca1,ca2 \
+--keystore-path /tmp/keystore.jks --keystore-password P4ssw0rd1 --private-key-alias mykey \
+--truststore-path /tmp/truststore.jks --truststore-password P4ssw0rd2 \
+--truststore-aliases ca1,ca2 \
 --truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem
 ```

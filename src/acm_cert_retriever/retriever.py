@@ -41,11 +41,12 @@ def parse_args(args):
         help="Passphrase to use to encrypt the downloaded key",
     )
     p.add(
-        "--add-downloaded-chain-to-truststore",
+        "--add-downloaded-chain-to-keystore",
         action="store_true",
+        default=False,
         env_var="RETRIEVER_ADD_DOWNLOADED_CHAIN",
         help="Whether or not to add the downloaded cert chain from the ARN "
-             "to the trust store. Allowed missing, 'true', 'false', 'yes', 'no', "
+             "to the key store. Allowed missing, 'true', 'false', 'yes', 'no', "
              "'1' or '0'",
     )
     p.add(
@@ -133,6 +134,10 @@ def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
     else:
         logger.info("...cert and key exported from AWS")
 
+    print("====all_data========")
+    print(all_data)
+    print("============")
+
     encrypted_key = rsa_util.import_key(all_data['PrivateKey'], acm_key_passphrase)
     decrypted_key = encrypted_key.export_key()
     all_data['PrivateKey'] = decrypted_key
@@ -159,11 +164,16 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     """
     logger.info("Creating KeyStore and TrustStore")
 
+    keystore_cert = cert_and_key_data['Certificate']
+    keystore_cert_list = [ keystore_cert ]
+    if args.add_downloaded_chain_to_keystore:
+        keystore_cert_list.append(cert_and_key_data['CertificateChain'])
+
     truststore_util.generate_keystore(
         args.keystore_path,
         args.keystore_password,
         cert_and_key_data['PrivateKey'],
-        cert_and_key_data['Certificate'],
+        keystore_cert_list,
         args.private_key_alias,
         args.private_key_password,
     )
@@ -171,13 +181,6 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     trusted_certs = truststore_util.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
-
-    # When we know whether or not to add our own ACM chain, we'd do something like this:
-    if args.add_downloaded_chain_to_truststore:
-        trusted_certs.append({
-            "alias": "aws-cert-chain",
-            "cert": cert_and_key_data["CertificateChain"],
-            "source": "memory"})
 
     truststore_util.generate_truststore(
         s3_util, args.truststore_path, args.truststore_password, trusted_certs

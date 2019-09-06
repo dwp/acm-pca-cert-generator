@@ -24,7 +24,7 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_
 
     assert result.acm_cert_arn == "A"
     assert result.acm_key_passphrase == "B"
-    assert result.add_downloaded_chain_to_truststore  # boolean True
+    assert result.add_downloaded_chain_to_keystore  # boolean True
     assert result.keystore_path == "D"
     assert result.keystore_password == "E"
     assert result.private_key_alias == "F"
@@ -58,7 +58,7 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_en
 
     assert result.acm_cert_arn == "A"
     assert result.acm_key_passphrase == "B"
-    assert result.add_downloaded_chain_to_truststore == False # boolean True
+    assert result.add_downloaded_chain_to_keystore == False # boolean True
     assert result.keystore_path == "D"
     assert result.keystore_password == "E"
     assert result.private_key_alias == "F"

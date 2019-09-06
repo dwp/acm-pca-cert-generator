@@ -21,7 +21,7 @@ def make_tuple(some_args_dict):
 template_args = {
     "acm_cert_arn": "my-cert-arn",
     "acm_key_passphrase": "my-key-passphrase",
-    "add_downloaded_chain_to_truststore": "yes",
+    "add_downloaded_chain_to_keystore": "yes",
     "keystore_path": "my-keystore-path",
     "keystore_password": "my-keystore-password",
     "private_key_alias": "my-key-alias",
@@ -181,7 +181,7 @@ class TestRetriever(unittest.TestCase):
 
         # Given
         no_download = copy.deepcopy(template_args)
-        no_download["add_downloaded_chain_to_truststore"] = "no"
+        no_download["add_downloaded_chain_to_keystore"] = "no"
         no_download_args = make_tuple(no_download)
 
         acm_client = MagicMock()
