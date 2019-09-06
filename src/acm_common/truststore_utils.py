@@ -28,7 +28,7 @@ def get_aws_certificate_chain(all_aws_data):
     """
     downloaded_cert = all_aws_data['Certificate']
     cert_chain = [downloaded_cert]
-    cert_chain.append("FAIL")
+    # cert_chain.append("FAIL")
     return cert_chain
 
 

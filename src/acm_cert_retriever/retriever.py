@@ -160,10 +160,11 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     """
     logger.info("Creating KeyStore and TrustStore")
 
-    keystore_cert = cert_and_key_data['Certificate']
-    keystore_cert_list = [keystore_cert]
     if args.add_downloaded_chain_to_keystore:
-        keystore_cert_list.append(cert_and_key_data['CertificateChain'])
+        keystore_cert_list = truststore_util.get_aws_certificate_chain(cert_and_key_data)
+    else:
+        keystore_cert = cert_and_key_data['Certificate']
+        keystore_cert_list = [keystore_cert]
 
     truststore_util.generate_keystore(
         args.keystore_path,

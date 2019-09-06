@@ -152,7 +152,7 @@ class TestRetriever(unittest.TestCase):
             "my-keystore-path",
             "my-keystore-password",
             'in-memory-decrypted-key',
-            'downloaded-cert',
+            ['downloaded-cert'],
             "my-key-alias",
             "my-key-password"
         )
@@ -216,7 +216,7 @@ class TestRetriever(unittest.TestCase):
             "my-keystore-path",
             "my-keystore-password",
             'in-memory-decrypted-key',
-            'downloaded-cert',
+            ['downloaded-cert'],
             "my-key-alias",
             "my-key-password"
         )

@@ -63,7 +63,7 @@ def test_generate_keystore():
     priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
     cert_pem = _generate_self_signed_cert(pkey)
     truststore_utils.generate_keystore(
-        keystore_path, keystore_password, priv_key, cert_pem, "testalias"
+        keystore_path, keystore_password, priv_key, [cert_pem], "testalias"
     )
 
     ks = jks.KeyStore.load(keystore_path, keystore_password)
