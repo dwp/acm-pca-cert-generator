@@ -114,7 +114,7 @@ class TestCertGen(unittest.TestCase):
             "my-keystore-path",
             "my-keystore-password",
             mock_private_key,
-            'created-cert',
+            ['created-cert'],
             "my-key-alias",
             "my-key-password"
         )

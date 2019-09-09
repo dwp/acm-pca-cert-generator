@@ -21,7 +21,7 @@ def make_tuple(some_args_dict):
 template_args = {
     "acm_cert_arn": "my-cert-arn",
     "acm_key_passphrase": "my-key-passphrase",
-    "add_downloaded_chain_to_truststore": "yes",
+    "add_downloaded_chain_to_keystore": "yes",
     "keystore_path": "my-keystore-path",
     "keystore_password": "my-keystore-password",
     "private_key_alias": "my-key-alias",
@@ -42,11 +42,6 @@ template_downloaded_data = {
 dummy_certs_data = [
     {"alias": "a1", "cert": "c1", "source": "s1"}
 ]
-
-dummy_certs_data_extended = copy.copy(dummy_certs_data)
-dummy_certs_data_extended.append(
-    {"alias": "aws-cert-chain", "cert": 'downloaded-chain', "source": "memory"}
-)
 
 
 class TestRetriever(unittest.TestCase):
@@ -110,8 +105,10 @@ class TestRetriever(unittest.TestCase):
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
     @mock.patch('acm_common.truststore_utils.generate_keystore')
     @mock.patch('acm_common.truststore_utils.generate_truststore')
+    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_with_cert_chain(
             self,
+            mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
             mocked_parse_trusted_cert_arg
@@ -122,7 +119,8 @@ class TestRetriever(unittest.TestCase):
 
         acm_client = MagicMock()
         acm_client.export_certificate = MagicMock()
-        acm_client.export_certificate.return_value = copy.deepcopy(template_downloaded_data)
+        aws_downloaded_data = copy.deepcopy(template_downloaded_data)
+        acm_client.export_certificate.return_value = aws_downloaded_data
 
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
@@ -134,6 +132,8 @@ class TestRetriever(unittest.TestCase):
         s3_client = MagicMock()
 
         mocked_parse_trusted_cert_arg.return_value = dummy_certs_data
+
+        mocked_get_aws_certificate_chain.return_value = ["downloaded-cert", "cert-1", "cert-2"]
 
         # When
         retriever.retrieve_key_and_cert_and_make_stores(acm_client,
@@ -148,11 +148,13 @@ class TestRetriever(unittest.TestCase):
 
         rsa_util.import_key.assert_called_once_with('downloaded-encrypted-key', 'my-key-passphrase')
 
+        mocked_get_aws_certificate_chain.assert_called_once_with(aws_downloaded_data)
+
         mocked_generate_keystore.assert_called_once_with(
             "my-keystore-path",
             "my-keystore-password",
             'in-memory-decrypted-key',
-            'downloaded-cert',
+            ["downloaded-cert", "cert-1", "cert-2"],
             "my-key-alias",
             "my-key-password"
         )
@@ -166,14 +168,16 @@ class TestRetriever(unittest.TestCase):
             s3_client,
             "my-truststore-path",
             "my-truststore-password",
-            dummy_certs_data_extended
+            dummy_certs_data
         )
 
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
     @mock.patch('acm_common.truststore_utils.generate_keystore')
     @mock.patch('acm_common.truststore_utils.generate_truststore')
+    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_without_cert_chain(
             self,
+            mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
             mocked_parse_trusted_cert_arg
@@ -181,7 +185,7 @@ class TestRetriever(unittest.TestCase):
 
         # Given
         no_download = copy.deepcopy(template_args)
-        no_download["add_downloaded_chain_to_truststore"] = "no"
+        no_download["add_downloaded_chain_to_keystore"] = False
         no_download_args = make_tuple(no_download)
 
         acm_client = MagicMock()
@@ -212,11 +216,13 @@ class TestRetriever(unittest.TestCase):
 
         rsa_util.import_key.assert_called_once_with('downloaded-encrypted-key', 'my-key-passphrase')
 
+        mocked_get_aws_certificate_chain.assert_not_called()
+
         mocked_generate_keystore.assert_called_once_with(
             "my-keystore-path",
             "my-keystore-password",
             'in-memory-decrypted-key',
-            'downloaded-cert',
+            ['downloaded-cert'],
             "my-key-alias",
             "my-key-password"
         )
