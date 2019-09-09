@@ -14,6 +14,7 @@ except ImportError:
 
 
 logger = logging.getLogger("truststore")
+certificate_suffix = '-----END CERTIFICATE-----'
 
 
 def get_aws_certificate_chain(all_aws_data):
@@ -28,7 +29,14 @@ def get_aws_certificate_chain(all_aws_data):
     """
     downloaded_cert = all_aws_data['Certificate']
     cert_chain = [downloaded_cert]
-    # cert_chain.append("FAIL")
+
+    downloaded_chain = all_aws_data['CertificateChain'].split(certificate_suffix)
+    downloaded_chain.pop()
+
+    for index in range(len(downloaded_chain)):
+        downloaded_chain[index] = (downloaded_chain[index] + certificate_suffix).strip()
+
+    cert_chain.extend(downloaded_chain)
     return cert_chain
 
 
