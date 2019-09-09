@@ -107,7 +107,7 @@ def generate_keystore(
         dumped_cert_list.append(dumped_cert)
 
     number_certs = len(dumped_cert_list)
-    logger.info("Adding % certs to keystore...".format(number_certs))
+    logger.info("Adding {} certs to keystore...".format(number_certs))
     pke = jks.PrivateKeyEntry.new(alias, dumped_cert_list, dumped_key, "rsa_raw")
 
     if priv_key_password:
