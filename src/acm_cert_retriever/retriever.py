@@ -14,6 +14,23 @@ acm_client = boto3.client("acm")
 s3_client = boto3.client("s3")
 
 
+def str2bool(v):
+    """Parse the supplied command line arguments into a boolean.
+
+    Returns:
+        Boolean: The parsed and validated command line arguments. Defaults to False.
+
+    """
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', '1'):
+        return True
+    elif v.lower() in ('no', 'false', '0'):
+        return False
+    else:
+        raise configargparse.ArgumentTypeError('Boolean value expected.')
+
+
 def parse_args(args):
     """Parse the supplied command line arguments.
 
@@ -42,12 +59,11 @@ def parse_args(args):
     )
     p.add(
         "--add-downloaded-chain-to-keystore",
-        action="store_true",
         default=False,
+        type=str2bool,
         env_var="RETRIEVER_ADD_DOWNLOADED_CHAIN",
         help="Whether or not to add the downloaded cert chain from the ARN "
-             "to the key store. Allowed missing, 'true', 'false', 'yes', 'no', "
-             "'1' or '0'",
+             "to the key store. Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'",
     )
     p.add(
         "--keystore-path",

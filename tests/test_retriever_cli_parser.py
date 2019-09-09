@@ -4,11 +4,11 @@ from acm_cert_retriever import retriever
 
 def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_list():
 
-    # add-downloaded-chain-to-keystore Allowed missing, 'true', 'false', 'yes', 'no', '1' or '0'
+    # add-downloaded-chain-to-keystore Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'
     args = """
         --acm-cert-arn A
         --acm-key-passphrase B
-        --add-downloaded-chain-to-keystore
+        --add-downloaded-chain-to-keystore true
         --keystore-path D 
         --keystore-password E
         --private-key-alias F
@@ -38,7 +38,7 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_
 
 def test_parse_args_for_retrieve_cert_add_downloaded_chain_to_keystore_is_optional():
 
-    # add-downloaded-chain-to-keystore Allowed missing, 'true', 'false', 'yes', 'no', '1' or '0'
+    # add-downloaded-chain-to-keystore Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'
     args = """
         --acm-cert-arn A
         --acm-key-passphrase B
@@ -73,8 +73,8 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_en
 
     os.environ['RETRIEVER_ACM_CERT_ARN'] = "A"
     os.environ['RETRIEVER_ACM_KEY_PASSPHRASE'] = "B"
-    # Allowed missing, 'true', 'false', 'yes', 'no', '1' or '0'
-    os.environ['RETRIEVER_ADD_DOWNLOADED_CHAIN'] = "no"
+    # Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'
+    os.environ['RETRIEVER_ADD_DOWNLOADED_CHAIN'] = "false"
     os.environ['RETRIEVER_KEYSTORE_PATH'] = "D"
     os.environ['RETRIEVER_KEYSTORE_PASSWORD'] = "E"
     os.environ['RETRIEVER_PRIVATE_KEY_ALIAS'] = "F"

@@ -174,8 +174,10 @@ class TestRetriever(unittest.TestCase):
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
     @mock.patch('acm_common.truststore_utils.generate_keystore')
     @mock.patch('acm_common.truststore_utils.generate_truststore')
+    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_without_cert_chain(
             self,
+            mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
             mocked_parse_trusted_cert_arg
@@ -183,7 +185,7 @@ class TestRetriever(unittest.TestCase):
 
         # Given
         no_download = copy.deepcopy(template_args)
-        no_download["add_downloaded_chain_to_keystore"] = "no"
+        no_download["add_downloaded_chain_to_keystore"] = False
         no_download_args = make_tuple(no_download)
 
         acm_client = MagicMock()
@@ -213,6 +215,8 @@ class TestRetriever(unittest.TestCase):
             CertificateArn='my-cert-arn', Passphrase='my-key-passphrase')
 
         rsa_util.import_key.assert_called_once_with('downloaded-encrypted-key', 'my-key-passphrase')
+
+        mocked_get_aws_certificate_chain.assert_not_called()
 
         mocked_generate_keystore.assert_called_once_with(
             "my-keystore-path",
