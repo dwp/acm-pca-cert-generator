@@ -20,6 +20,48 @@ valid_subject_details = {
 }
 
 
+def test_get_aws_certificate_chain_with_no_entries():
+    template_downloaded_data = {
+        'Certificate': '-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----',
+        'CertificateChain': '',
+        'PrivateKey': '-----BEGIN ENCRYPTED PRIVATE KEY-----\nKEY\n-----END ENCRYPTED PRIVATE KEY-----'
+    }
+    actual_chain = truststore_utils.get_aws_certificate_chain(template_downloaded_data)
+    print(actual_chain)
+    assert len(actual_chain) == 1
+    assert actual_chain[0] == "-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----"
+
+
+def test_get_aws_certificate_chain_with_single_entry():
+    template_downloaded_data = {
+        'Certificate': '-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----',
+        'CertificateChain': '-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----',
+        'PrivateKey': '-----BEGIN ENCRYPTED PRIVATE KEY-----\nKEY\n-----END ENCRYPTED PRIVATE KEY-----'
+    }
+    actual_chain = truststore_utils.get_aws_certificate_chain(template_downloaded_data)
+    print(actual_chain)
+    assert len(actual_chain) == 2
+    assert actual_chain[0] == "-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----"
+    assert actual_chain[1] == "-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----"
+
+
+def test_get_aws_certificate_chain_with_multiple_entries():
+    template_downloaded_data = {
+        'Certificate': '-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----',
+        'CertificateChain': '-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----\n'
+                            '-----BEGIN CERTIFICATE-----\nCERT2\n-----END CERTIFICATE-----\n'
+                            '-----BEGIN CERTIFICATE-----\nCERT3\n-----END CERTIFICATE-----',
+        'PrivateKey': '-----BEGIN ENCRYPTED PRIVATE KEY-----\nKEY\n-----END ENCRYPTED PRIVATE KEY-----'
+    }
+    actual_chain = truststore_utils.get_aws_certificate_chain(template_downloaded_data)
+    print(actual_chain)
+    assert len(actual_chain) == 4
+    assert actual_chain[0] == "-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----"
+    assert actual_chain[1] == "-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----"
+    assert actual_chain[2] == "-----BEGIN CERTIFICATE-----\nCERT2\n-----END CERTIFICATE-----"
+    assert actual_chain[3] == "-----BEGIN CERTIFICATE-----\nCERT3\n-----END CERTIFICATE-----"
+
+
 def test_parse_trusted_cert_arg():
     trust_aliases = "myca1,myca2"
     trust_certs = "s3://certbucket/ca1.pem,s3://certbucket/ca2.pem"
@@ -47,7 +89,7 @@ def test_generate_keystore():
     priv_key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey)
     cert_pem = _generate_self_signed_cert(pkey)
     truststore_utils.generate_keystore(
-        keystore_path, keystore_password, priv_key, cert_pem, "testalias"
+        keystore_path, keystore_password, priv_key, [cert_pem], "testalias"
     )
 
     ks = jks.KeyStore.load(keystore_path, keystore_password)

@@ -417,7 +417,7 @@ def generate_key_and_cert(
         args.keystore_path,
         args.keystore_password,
         key,
-        cert_and_chain["Certificate"],
+        [cert_and_chain["Certificate"]],
         args.private_key_alias,
         args.private_key_password,
     )
