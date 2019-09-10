@@ -27,7 +27,6 @@ def test_get_aws_certificate_chain_with_no_entries():
         'PrivateKey': '-----BEGIN ENCRYPTED PRIVATE KEY-----\nKEY\n-----END ENCRYPTED PRIVATE KEY-----'
     }
     actual_chain = truststore_utils.get_aws_certificate_chain(template_downloaded_data)
-    print(actual_chain)
     assert len(actual_chain) == 1
     assert actual_chain[0] == "-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----"
 
@@ -39,7 +38,6 @@ def test_get_aws_certificate_chain_with_single_entry():
         'PrivateKey': '-----BEGIN ENCRYPTED PRIVATE KEY-----\nKEY\n-----END ENCRYPTED PRIVATE KEY-----'
     }
     actual_chain = truststore_utils.get_aws_certificate_chain(template_downloaded_data)
-    print(actual_chain)
     assert len(actual_chain) == 2
     assert actual_chain[0] == "-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----"
     assert actual_chain[1] == "-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----"
@@ -54,7 +52,6 @@ def test_get_aws_certificate_chain_with_multiple_entries():
         'PrivateKey': '-----BEGIN ENCRYPTED PRIVATE KEY-----\nKEY\n-----END ENCRYPTED PRIVATE KEY-----'
     }
     actual_chain = truststore_utils.get_aws_certificate_chain(template_downloaded_data)
-    print(actual_chain)
     assert len(actual_chain) == 4
     assert actual_chain[0] == "-----BEGIN CERTIFICATE-----\nDOWNLOADED\n-----END CERTIFICATE-----"
     assert actual_chain[1] == "-----BEGIN CERTIFICATE-----\nCERT1\n-----END CERTIFICATE-----"
