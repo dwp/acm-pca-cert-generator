@@ -1,0 +1,5 @@
+ConfigArgParse
+boto3
+pyjks
+pyopenssl
+pycryptodome]

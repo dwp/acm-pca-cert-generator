@@ -4,6 +4,9 @@
 #
 version: 2.1
 
+orbs:
+  snyk: snyk/snyk@0.0.8
+
 commands:
   test:
     parameters:
@@ -64,6 +67,38 @@ jobs:
         - acm_cert_helper-*.tar.gz
         - VERSION
 
+  snyk-pr:
+    docker:
+      - image: circleci/python:3.7.1
+    steps:
+      - checkout
+      - run:
+          # Snyk is supposed to do this automatically but it doesn't, so we manually install dependencies to be tested
+          name: Install dependencies
+          command: |
+            sudo pip install -r requirements.txt
+      - snyk/scan:
+          organization: dwp-dataworks
+          severity-threshold: high
+          target-file: requirements.txt
+          project: '${CIRCLE_PROJECT_REPONAME}/pr-kafka-producer'
+
+  snyk-master:
+    docker:
+      - image: circleci/python:3.7.1
+    steps:
+      - checkout
+      - run:
+          # Snyk is supposed to do this automatically but it doesn't, so we manually install dependencies to be tested
+          name: Install dependencies
+          command: |
+            sudo pip install -r requirements.txt
+      - snyk/scan:
+          organization: dwp-dataworks
+          severity-threshold: high
+          target-file: requirements.txt
+          project: '${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}-kafka-producer'
+
   publish-github-release:
     docker:
     - image: cibuilds/github:0.10
@@ -87,6 +122,18 @@ workflows:
         requires:
         - test_27
         - test_37
+    - snyk-pr:
+        requires:
+          - build
+        filters:
+          branches:
+            ignore: master
+    - snyk-master:
+        requires:
+          - build
+        filters:
+          branches:
+            only: master
     - publish-github-release:
         requires:
         - build
