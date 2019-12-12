@@ -19,6 +19,7 @@ commands:
             PATH=$PATH:~/.local/bin
             pip install --user tox
             AWS_DEFAULT_REGION=eu-west-2 ~/.local/bin/tox -e << parameters.toxenv >>
+
 jobs:
   test_27:
     working_directory: ~/repo
