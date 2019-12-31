@@ -111,3 +111,6 @@ venv.bak/
 /.vscode
 .idea
 *.iml
+
+# Concourse CI
+aviator_pipeline.yml
