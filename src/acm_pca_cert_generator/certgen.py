@@ -419,13 +419,13 @@ def generate_key_and_cert(
     else:
         generate_key_and_trust_store(s3_util, truststore_util, args,
                                      key, cert_and_chain)
-        
+
 
 def update_ca_trust(
     s3_util, truststore_util, args,
     key, cert_and_chain
 ):
-    """ Place generated key and cert in ca trust
+    """Place generated key and cert in ca trust.
 
     Args:
         s3_util (Object): The boto3 utility to use
@@ -450,11 +450,12 @@ def update_ca_trust(
         s3_util, trusted_certs
     )
 
+
 def generate_key_and_trust_store(
     s3_util, truststore_util, args,
     key, cert_and_chain
 ):
-    """ Place generated key and cert in keystore and truststore
+    """ Place generated key and cert in keystore and truststore.
 
     Args:
         s3_util (Object): The boto3 utility to use
@@ -480,6 +481,7 @@ def generate_key_and_trust_store(
     truststore_util.generate_truststore(
         s3_util, args.truststore_path, args.truststore_password, trusted_certs
     )
+
 
 def _main(args):
     args = parse_args(args)

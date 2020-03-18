@@ -124,6 +124,7 @@ def generate_keystore(
     keystore.save(keystore_path, keystore_password)
     logger.info("Java KeyStore generated")
 
+
 def add_cert_and_key(
     priv_key, cert_list, alias, priv_key_password=None
 ):
@@ -151,6 +152,7 @@ def add_cert_and_key(
 
     logger.info("Updating CA trust")
     os.system("update-ca-trust")
+
 
 def parse_s3_url(url):
     """Extract the S3 bucket name and key from a given S3 URL.
@@ -249,6 +251,7 @@ def generate_truststore(s3_client, truststore_path, truststore_password, certs):
     truststore.save(truststore_path, truststore_password)
     logger.info("Java TrustStore generated")
 
+
 def add_ca_certs(s3_client, certs):
     """Updates CA certificates.
 
@@ -279,4 +282,3 @@ def add_ca_certs(s3_client, certs):
 
     logger.info("Updating CA trust")
     os.system("update-ca-trust")
-
