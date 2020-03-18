@@ -248,24 +248,8 @@ def test_parse_args_missing_validity_period():
     missing_arg_test(["--validity-period", "1d"])
 
 
-def test_parse_args_missing_keystore_path():
-    missing_arg_test(["--keystore-path", "tmp/keystore.jks"])
-
-
-def test_parse_args_missing_keystore_password():
-    missing_arg_test(["--keystore-password", "password1"])
-
-
 def test_parse_args_missing_private_key_alias():
     missing_arg_test(["--private-key-alias", "mypk"])
-
-
-def test_parse_args_missing_truststore_path():
-    missing_arg_test(["--truststore-path", "tmp/truststore.jks"])
-
-
-def test_parse_args_missing_truststore_password():
-    missing_arg_test(["--truststore-password", "password2"])
 
 
 def test_parse_args_missing_truststore_aliases():
