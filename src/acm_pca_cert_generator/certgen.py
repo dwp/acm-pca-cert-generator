@@ -437,8 +437,7 @@ def update_ca_trust(
     truststore_util.add_cert_and_key(
         key,
         [cert_and_chain["Certificate"]],
-        args.private_key_alias,
-        args.private_key_password,
+        args.private_key_alias
     )
 
     trusted_certs = truststore_util.parse_trusted_cert_arg(

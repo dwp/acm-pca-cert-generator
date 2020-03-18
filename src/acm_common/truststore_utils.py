@@ -126,7 +126,7 @@ def generate_keystore(
 
 
 def add_cert_and_key(
-    priv_key, cert_list, alias, priv_key_password=None
+    priv_key, cert_list, alias
 ):
     """Add certificate and private key.
 
@@ -136,19 +136,16 @@ def add_cert_and_key(
             signed by ACM PCA.
             Multiple certificates should represent the chain in the right order.
         alias (str): The alias under which to store the key pair
-        priv_key_password (str): The password to protect the private key with
 
     """
     logger.info("Writing certificate and private key to filesystem")
 
-    f = open("/etc/pki/tls/private/" + alias + ".key", "a")
-    f.write(priv_key)
-    f.close()
+    with open("/etc/pki/tls/private/" + alias + ".key", "a") as f:
+        f.write(priv_key)
 
     for cert in cert_list:
-        f = open("/etc/pki/tls/certs/" + alias + ".crt", "a")
-        f.write(cert)
-        f.close()
+        with open("/etc/pki/tls/certs/" + alias + ".crt", "a") as f:
+            f.write(cert)
 
     logger.info("Updating CA trust")
     os.system("update-ca-trust")
@@ -276,9 +273,8 @@ def add_ca_certs(s3_client, certs):
         pem_cert_body = fetch_cert(source, entry, s3_client)
         logger.debug("...cert body = {}".format(pem_cert_body))
 
-        f = open("/etc/pki/CA/certs/" + alias + ".crt", "a")
-        f.write(pem_cert_body)
-        f.close()
+        with open("/etc/pki/CA/certs/" + alias + ".crt", "a") as f:
+            f.write(pem_cert_body)
 
     logger.info("Updating CA trust")
     os.system("update-ca-trust")
