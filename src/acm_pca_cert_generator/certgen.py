@@ -198,13 +198,13 @@ def parse_args(args):
     )
     p.add(
         "--keystore-path",
-        required=True,
+        required=False,
         env_var="CERTGEN_KEYSTORE_PATH",
         help="Filename for the Java Keystore",
     )
     p.add(
         "--keystore-password",
-        required=True,
+        required=False,
         env_var="CERTGEN_KEYSTORE_PASSWORD",
         help="Password for the Java Keystore",
     )
@@ -221,13 +221,13 @@ def parse_args(args):
     )
     p.add(
         "--truststore-path",
-        required=True,
+        required=False,
         env_var="CERTGEN_TRUSTSTORE_PATH",
         help="Filename of the Java TrustStore",
     )
     p.add(
         "--truststore-password",
-        required=True,
+        required=False,
         env_var="CERTGEN_TRUSTSTORE_PASSWORD",
         help="Password for the Java TrustStore",
     )
@@ -393,7 +393,7 @@ def generate_key_and_cert(
         acmpca_util, s3_util, truststore_util, args,
         fn_generate_private_key, fn_generate_csr, fn_sign_cert
 ):
-    """Generate a key and cert in ACM PCA, then the stores.
+    """Generate a key and cert in ACM PCA.
 
     Args:
         acmpca_util (Object): The boto3 utility to use
@@ -413,6 +413,55 @@ def generate_key_and_cert(
         acmpca_util, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
 
+    if (args.keystore_path is None) and (args.truststore_path is None):
+        update_ca_trust(s3_util, truststore_util, args,
+                        key, cert_and_chain)
+    else:
+        generate_key_and_trust_store(s3_util, truststore_util, args,
+                                     key, cert_and_chain)
+
+
+def update_ca_trust(
+    s3_util, truststore_util, args,
+    key, cert_and_chain
+):
+    """Place generated key and cert in ca trust.
+
+    Args:
+        s3_util (Object): The boto3 utility to use
+        truststore_util (Object): The utility package to pass the data to
+        args (Object): The parsed command line arguments
+        key (Object): The generated private key
+        cert_and_chain (Object): The generated certificate chain
+    """
+    truststore_util.add_cert_and_key(
+        key,
+        [cert_and_chain["Certificate"]],
+        args.private_key_alias
+    )
+
+    trusted_certs = truststore_util.parse_trusted_cert_arg(
+        args.truststore_aliases, args.truststore_certs
+    )
+
+    truststore_util.add_ca_certs(
+        s3_util, trusted_certs
+    )
+
+
+def generate_key_and_trust_store(
+    s3_util, truststore_util, args,
+    key, cert_and_chain
+):
+    """Place generated key and cert in keystore and truststore.
+
+    Args:
+        s3_util (Object): The boto3 utility to use
+        truststore_util (Object): The utility package to pass the data to
+        args (Object): The parsed command line arguments
+        key (Object): The generated private key
+        cert_and_chain (Object): The generated certificate chain
+    """
     truststore_util.generate_keystore(
         args.keystore_path,
         args.keystore_password,
