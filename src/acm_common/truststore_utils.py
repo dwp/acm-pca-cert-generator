@@ -128,7 +128,7 @@ def generate_keystore(
 def add_cert_and_key(
     priv_key, cert_list, alias, priv_key_password=None
 ):
-    """Add certificate and private key
+    """Add certificate and private key.
 
     Args:
         priv_key (str): The base64 PEM-encoded private key to store
@@ -253,7 +253,7 @@ def generate_truststore(s3_client, truststore_path, truststore_password, certs):
 
 
 def add_ca_certs(s3_client, certs):
-    """Updates CA certificates.
+    """Update CA certificates.
 
     Supports certs that are either specified from an s3 url,
     or provided in plain text in memory

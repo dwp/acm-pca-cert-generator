@@ -455,7 +455,7 @@ def generate_key_and_trust_store(
     s3_util, truststore_util, args,
     key, cert_and_chain
 ):
-    """ Place generated key and cert in keystore and truststore.
+    """Place generated key and cert in keystore and truststore.
 
     Args:
         s3_util (Object): The boto3 utility to use
