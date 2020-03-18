@@ -124,6 +124,33 @@ def generate_keystore(
     keystore.save(keystore_path, keystore_password)
     logger.info("Java KeyStore generated")
 
+def add_cert_and_key(
+    priv_key, cert_list, alias, priv_key_password=None
+):
+    """Add certificate and private key
+
+    Args:
+        priv_key (str): The base64 PEM-encoded private key to store
+        cert_list (List of str): A list of base64 PEM-encoded certificates
+            signed by ACM PCA.
+            Multiple certificates should represent the chain in the right order.
+        alias (str): The alias under which to store the key pair
+        priv_key_password (str): The password to protect the private key with
+
+    """
+    logger.info("Writing certificate and private key to filesystem")
+
+    f = open("/etc/pki/tls/private/" + alias + ".key", "a")
+    f.write(priv_key)
+    f.close()
+
+    for cert in cert_list:
+        f = open("/etc/pki/tls/certs/" + alias + ".crt", "a")
+        f.write(cert)
+        f.close()
+
+    logger.info("Updating CA trust")
+    os.system("update-ca-trust")
 
 def parse_s3_url(url):
     """Extract the S3 bucket name and key from a given S3 URL.
@@ -221,3 +248,35 @@ def generate_truststore(s3_client, truststore_path, truststore_password, certs):
     truststore = jks.KeyStore.new("jks", trusted_certs)
     truststore.save(truststore_path, truststore_password)
     logger.info("Java TrustStore generated")
+
+def add_ca_certs(s3_client, certs):
+    """Updates CA certificates.
+
+    Supports certs that are either specified from an s3 url,
+    or provided in plain text in memory
+
+    Args:
+        s3_client (Object): The aws utils to use
+        certs (list): A list of dicts containing aliases and certificate paths
+                      for SSL certs to add to the CA certificates, e.g.:
+                      [{"alias": "testcert", "cert": "/tmp/mycert.pem"}]
+
+    """
+    logger.info("Fetching CA certs and writing to filesystem")
+
+    for cert_entry in certs:
+        alias = cert_entry["alias"]
+        entry = cert_entry["cert"]
+        source = cert_entry["source"]
+        logger.info("...Processing cert with alias = {} from {}".format(alias, source))
+
+        pem_cert_body = fetch_cert(source, entry, s3_client)
+        logger.debug("...cert body = {}".format(pem_cert_body))
+
+        f = open("/etc/pki/CA/certs/" + alias + ".crt", "a")
+        f.write(pem_cert_body)
+        f.close()
+
+    logger.info("Updating CA trust")
+    os.system("update-ca-trust")
+
