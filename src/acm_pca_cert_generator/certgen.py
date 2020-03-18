@@ -434,7 +434,6 @@ def update_ca_trust(
         key (Object): The generated private key
         cert_and_chain (Object): The generated certificate chain
     """
-
     truststore_util.add_cert_and_key(
         key,
         [cert_and_chain["Certificate"]],
@@ -464,7 +463,6 @@ def generate_key_and_trust_store(
         key (Object): The generated private key
         cert_and_chain (Object): The generated certificate chain
     """
-
     truststore_util.generate_keystore(
         args.keystore_path,
         args.keystore_password,
