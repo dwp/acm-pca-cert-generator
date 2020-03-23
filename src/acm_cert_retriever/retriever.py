@@ -53,7 +53,7 @@ def parse_args(args):
     )
     p.add(
         "--acm-key-passphrase",
-        required=True,
+        required=False,
         env_var="RETRIEVER_ACM_KEY_PASSPHRASE",
         help="Passphrase to use to encrypt the downloaded key",
     )
@@ -67,13 +67,13 @@ def parse_args(args):
     )
     p.add(
         "--keystore-path",
-        required=True,
+        required=False,
         env_var="RETRIEVER_KEYSTORE_PATH",
         help="Filename to create for the Java Keystore",
     )
     p.add(
         "--keystore-password",
-        required=True,
+        required=False,
         env_var="RETRIEVER_KEYSTORE_PASSWORD",
         help="Password for the Java Keystore",
     )
@@ -90,13 +90,13 @@ def parse_args(args):
     )
     p.add(
         "--truststore-path",
-        required=True,
+        required=False,
         env_var="RETRIEVER_TRUSTSTORE_PATH",
         help="Filename to create for the Java TrustStore",
     )
     p.add(
         "--truststore-password",
-        required=True,
+        required=False,
         env_var="RETRIEVER_TRUSTSTORE_PASSWORD",
         help="Password for the Java TrustStore",
     )
@@ -201,6 +201,28 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     logger.info("Created KeyStore and TrustStore")
 
 
+def update_ca_trust(
+    s3_util, truststore_util, args, cert_and_key
+):
+    """Place retrieved key and cert in ca trust.
+
+    Args:
+        s3_util (Object): The boto3 utility to use
+        truststore_util (Object): The utility package to pass the data to
+        args (Object): The parsed command line arguments
+        cert_and_key (Object): The retrieved certificate and key
+    """
+    truststore_util.add_cert_and_key(cert_and_key["PrivateKey"], [cert_and_key["Certificate"]], args.private_key_alias)
+
+    trusted_certs = truststore_util.parse_trusted_cert_arg(
+        args.truststore_aliases, args.truststore_certs
+    )
+
+    truststore_util.add_ca_certs(
+        s3_util, trusted_certs
+    )
+
+
 def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
                                           rsa_util, args):
     """Create a Keystore and Truststore from AWS data.
@@ -217,7 +239,10 @@ def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
                                          rsa_util,
                                          args.acm_cert_arn,
                                          args.acm_key_passphrase)
-    create_stores(args, cert_and_key, s3_util, truststore_util)
+    if (args.keystore_path is None) and (args.truststore_path is None):
+        update_ca_trust(s3_util, truststore_util, args, cert_and_key)
+    else:
+        create_stores(args, cert_and_key, s3_util, truststore_util)
 
 
 def _main(args):
