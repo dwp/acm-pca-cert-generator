@@ -212,7 +212,9 @@ def update_ca_trust(
         args (Object): The parsed command line arguments
         cert_and_key (Object): The retrieved certificate and key
     """
-    truststore_util.add_cert_and_key(cert_and_key["PrivateKey"], [cert_and_key["Certificate"]], args.private_key_alias)
+    truststore_util.add_cert_and_key(cert_and_key["PrivateKey"], 
+                                    [cert_and_key["Certificate"]], 
+                                    args.private_key_alias)
 
     trusted_certs = truststore_util.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
