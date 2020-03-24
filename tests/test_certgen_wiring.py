@@ -75,6 +75,8 @@ class TestCertGen(unittest.TestCase):
         mock_truststore_utils.generate_truststore = MagicMock()
         mock_truststore_utils.generate_keystore = MagicMock()
         mock_truststore_utils.parse_trusted_cert_arg = MagicMock()
+        mock_truststore_utils.add_cert_and_key = MagicMock()
+        mock_truststore_utils.add_ca_certs = MagicMock()
         mock_truststore_utils.parse_trusted_cert_arg.return_value = dummy_certs_data
 
         mock_generate_private_key = MagicMock()
