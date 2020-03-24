@@ -106,6 +106,8 @@ class TestRetriever(unittest.TestCase):
     @mock.patch('acm_common.truststore_utils.generate_keystore')
     @mock.patch('acm_common.truststore_utils.generate_truststore')
     @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
+    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
+    @mock.patch('acm_common.truststore_utils.add_ca_certs')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_with_cert_chain(
             self,
             mocked_get_aws_certificate_chain,
@@ -175,6 +177,8 @@ class TestRetriever(unittest.TestCase):
     @mock.patch('acm_common.truststore_utils.generate_keystore')
     @mock.patch('acm_common.truststore_utils.generate_truststore')
     @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
+    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
+    @mock.patch('acm_common.truststore_utils.add_ca_certs')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_without_cert_chain(
             self,
             mocked_get_aws_certificate_chain,

@@ -121,11 +121,6 @@ class TestCertGen(unittest.TestCase):
             "my-key-password"
         )
 
-        mock_truststore_utils.parse_trusted_cert_arg.assert_called_once_with(
-            "my-truststore-aliases",
-            "my-truststore-certs"
-        )
-
         mock_truststore_utils.generate_truststore.assert_called_once_with(
             s3_client,
             "my-truststore-path",
