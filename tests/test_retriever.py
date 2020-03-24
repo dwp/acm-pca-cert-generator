@@ -125,6 +125,8 @@ class TestRetriever(unittest.TestCase):
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
         dummy_rsakey_object = MagicMock()
+        truststore_utils.add_cert_and_key = MagicMock()
+        truststore_utils.add_ca_certs = MagicMock()
         rsa_util.import_key.return_value = dummy_rsakey_object
         dummy_rsakey_object.export_key = MagicMock()
         dummy_rsakey_object.export_key.return_value = 'in-memory-decrypted-key'
@@ -159,7 +161,7 @@ class TestRetriever(unittest.TestCase):
             "my-key-password"
         )
 
-        mocked_parse_trusted_cert_arg.assert_called_once_with(
+        mocked_parse_trusted_cert_arg.assert_called_with(
             "my-truststore-aliases",
             "my-truststore-certs"
         )
@@ -190,6 +192,8 @@ class TestRetriever(unittest.TestCase):
 
         acm_client = MagicMock()
         acm_client.export_certificate = MagicMock()
+        truststore_utils.add_cert_and_key = MagicMock()
+        truststore_utils.add_ca_certs = MagicMock()
         acm_client.export_certificate.return_value = copy.deepcopy(template_downloaded_data)
 
         rsa_util = MagicMock()
@@ -227,7 +231,7 @@ class TestRetriever(unittest.TestCase):
             "my-key-password"
         )
 
-        mocked_parse_trusted_cert_arg.assert_called_once_with(
+        mocked_parse_trusted_cert_arg.assert_called_with(
             "my-truststore-aliases",
             "my-truststore-certs"
         )

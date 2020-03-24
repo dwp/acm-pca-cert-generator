@@ -241,10 +241,11 @@ def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
                                          rsa_util,
                                          args.acm_cert_arn,
                                          args.acm_key_passphrase)
-    if (args.keystore_path is None) and (args.truststore_path is None):
-        update_ca_trust(s3_util, truststore_util, args, cert_and_key)
-    else:
+
+    if (args.keystore_path is not None) and (args.truststore_path is not None):
         create_stores(args, cert_and_key, s3_util, truststore_util)
+
+    update_ca_trust(s3_util, truststore_util, args, cert_and_key)
 
 
 def _main(args):
