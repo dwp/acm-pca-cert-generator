@@ -170,6 +170,8 @@ class TestRetriever(unittest.TestCase):
             dummy_certs_data
         )
 
+        mocked_add_ca_certs.assert_called_once()
+
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
     @mock.patch('acm_common.truststore_utils.generate_keystore')
     @mock.patch('acm_common.truststore_utils.generate_truststore')
@@ -236,6 +238,8 @@ class TestRetriever(unittest.TestCase):
             "my-truststore-password",
             dummy_certs_data
         )
+
+        mocked_add_ca_certs.assert_called_once()
 
 
 if __name__ == '__main__':
