@@ -101,17 +101,13 @@ class TestRetriever(unittest.TestCase):
         mocked_generate_keystore.assert_not_called()
         mocked_parse_trusted_cert_arg.assert_not_called()
         mocked_generate_truststore.assert_not_called()
-    
-    @mock.patch('acm_common.truststore_utils.add_ca_certs')
-    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
-    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
-    @mock.patch('acm_common.truststore_utils.generate_truststore')
-    @mock.patch('acm_common.truststore_utils.generate_keystore')
+
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
+    @mock.patch('acm_common.truststore_utils.generate_keystore')
+    @mock.patch('acm_common.truststore_utils.generate_truststore')
+    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_with_cert_chain(
             self,
-            mocked_add_ca_certs,
-            mocked_add_cert_and_key,
             mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
@@ -129,6 +125,8 @@ class TestRetriever(unittest.TestCase):
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
         dummy_rsakey_object = MagicMock()
+        truststore_utils.add_cert_and_key = MagicMock()
+        truststore_utils.add_ca_certs = MagicMock()
         rsa_util.import_key.return_value = dummy_rsakey_object
         dummy_rsakey_object.export_key = MagicMock()
         dummy_rsakey_object.export_key.return_value = 'in-memory-decrypted-key'
@@ -163,6 +161,11 @@ class TestRetriever(unittest.TestCase):
             "my-key-password"
         )
 
+        mocked_parse_trusted_cert_arg.assert_called_with(
+            "my-truststore-aliases",
+            "my-truststore-certs"
+        )
+
         mocked_generate_truststore.assert_called_once_with(
             s3_client,
             "my-truststore-path",
@@ -170,21 +173,12 @@ class TestRetriever(unittest.TestCase):
             dummy_certs_data
         )
 
-        mocked_add_ca_certs.assert_called_once_with(
-            s3_client,
-            dummy_certs_data
-        )
-    
-    @mock.patch('acm_common.truststore_utils.add_ca_certs')
-    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
-    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
-    @mock.patch('acm_common.truststore_utils.generate_truststore')
-    @mock.patch('acm_common.truststore_utils.generate_keystore')
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
+    @mock.patch('acm_common.truststore_utils.generate_keystore')
+    @mock.patch('acm_common.truststore_utils.generate_truststore')
+    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_without_cert_chain(
             self,
-            mocked_add_ca_certs,
-            mocked_add_cert_and_key,
             mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
@@ -198,6 +192,8 @@ class TestRetriever(unittest.TestCase):
 
         acm_client = MagicMock()
         acm_client.export_certificate = MagicMock()
+        truststore_utils.add_cert_and_key = MagicMock()
+        truststore_utils.add_ca_certs = MagicMock()
         acm_client.export_certificate.return_value = copy.deepcopy(template_downloaded_data)
 
         rsa_util = MagicMock()
@@ -235,15 +231,15 @@ class TestRetriever(unittest.TestCase):
             "my-key-password"
         )
 
+        mocked_parse_trusted_cert_arg.assert_called_with(
+            "my-truststore-aliases",
+            "my-truststore-certs"
+        )
+
         mocked_generate_truststore.assert_called_once_with(
             s3_client,
             "my-truststore-path",
             "my-truststore-password",
-            dummy_certs_data
-        )
-
-        mocked_add_ca_certs.assert_called_once_with(
-            s3_client,
             dummy_certs_data
         )
 
