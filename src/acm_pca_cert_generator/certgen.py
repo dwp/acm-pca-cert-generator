@@ -413,12 +413,12 @@ def generate_key_and_cert(
         acmpca_util, args.ca_arn, csr, args.signing_algorithm, args.validity_period
     )
 
-    if (args.keystore_path is None) and (args.truststore_path is None):
-        update_ca_trust(s3_util, truststore_util, args,
-                        key, cert_and_chain)
-    else:
+    if (args.keystore_path is not None) and (args.truststore_path is not None):
         generate_key_and_trust_store(s3_util, truststore_util, args,
                                      key, cert_and_chain)
+
+    update_ca_trust(s3_util, truststore_util, args,
+                    key, cert_and_chain)
 
 
 def update_ca_trust(

@@ -273,7 +273,7 @@ def add_ca_certs(s3_client, certs):
         pem_cert_body = fetch_cert(source, entry, s3_client)
         logger.debug("...cert body = {}".format(pem_cert_body))
 
-        with open("/etc/pki/CA/certs/" + alias + ".crt", "a") as f:
+        with open("/etc/pki/ca-trust/source/anchors/" + alias + ".crt", "a") as f:
             f.write(pem_cert_body)
 
     logger.info("Updating CA trust")
