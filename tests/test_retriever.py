@@ -101,13 +101,13 @@ class TestRetriever(unittest.TestCase):
         mocked_generate_keystore.assert_not_called()
         mocked_parse_trusted_cert_arg.assert_not_called()
         mocked_generate_truststore.assert_not_called()
-
-    @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
-    @mock.patch('acm_common.truststore_utils.generate_keystore')
-    @mock.patch('acm_common.truststore_utils.generate_truststore')
-    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
-    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
+    
     @mock.patch('acm_common.truststore_utils.add_ca_certs')
+    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
+    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
+    @mock.patch('acm_common.truststore_utils.generate_truststore')
+    @mock.patch('acm_common.truststore_utils.generate_keystore')
+    @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_with_cert_chain(
             self,
             mocked_add_ca_certs,
@@ -174,13 +174,13 @@ class TestRetriever(unittest.TestCase):
             s3_client,
             dummy_certs_data
         )
-
-    @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
-    @mock.patch('acm_common.truststore_utils.generate_keystore')
-    @mock.patch('acm_common.truststore_utils.generate_truststore')
-    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
-    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
+    
     @mock.patch('acm_common.truststore_utils.add_ca_certs')
+    @mock.patch('acm_common.truststore_utils.add_cert_and_key')
+    @mock.patch('acm_common.truststore_utils.get_aws_certificate_chain')
+    @mock.patch('acm_common.truststore_utils.generate_truststore')
+    @mock.patch('acm_common.truststore_utils.generate_keystore')
+    @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_without_cert_chain(
             self,
             mocked_add_ca_certs,
