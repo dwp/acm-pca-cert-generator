@@ -113,7 +113,9 @@ class TestRetriever(unittest.TestCase):
             mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
-            mocked_parse_trusted_cert_arg
+            mocked_parse_trusted_cert_arg,
+            mocked_add_cert_and_key,
+            mocked_add_ca_certs
     ):
 
         # Given
@@ -161,11 +163,6 @@ class TestRetriever(unittest.TestCase):
             "my-key-password"
         )
 
-        mocked_parse_trusted_cert_arg.assert_called_once_with(
-            "my-truststore-aliases",
-            "my-truststore-certs"
-        )
-
         mocked_generate_truststore.assert_called_once_with(
             s3_client,
             "my-truststore-path",
@@ -184,7 +181,9 @@ class TestRetriever(unittest.TestCase):
             mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
-            mocked_parse_trusted_cert_arg
+            mocked_parse_trusted_cert_arg,
+            mocked_add_cert_and_key,
+            mocked_add_ca_certs
     ):
 
         # Given
@@ -229,11 +228,6 @@ class TestRetriever(unittest.TestCase):
             ['downloaded-cert'],
             "my-key-alias",
             "my-key-password"
-        )
-
-        mocked_parse_trusted_cert_arg.assert_called_once_with(
-            "my-truststore-aliases",
-            "my-truststore-certs"
         )
 
         mocked_generate_truststore.assert_called_once_with(
