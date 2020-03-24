@@ -110,12 +110,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch('acm_common.truststore_utils.add_ca_certs')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_with_cert_chain(
             self,
+            mocked_add_ca_certs,
+            mocked_add_cert_and_key,
             mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
-            mocked_parse_trusted_cert_arg,
-            mocked_add_cert_and_key,
-            mocked_add_ca_certs
+            mocked_parse_trusted_cert_arg
     ):
 
         # Given
@@ -170,7 +170,10 @@ class TestRetriever(unittest.TestCase):
             dummy_certs_data
         )
 
-        mocked_add_ca_certs.assert_called_once()
+        mocked_add_ca_certs.assert_called_once_with(
+            s3_client,
+            dummy_certs_data
+        )
 
     @mock.patch('acm_common.truststore_utils.parse_trusted_cert_arg')
     @mock.patch('acm_common.truststore_utils.generate_keystore')
@@ -180,12 +183,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch('acm_common.truststore_utils.add_ca_certs')
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_without_cert_chain(
             self,
+            mocked_add_ca_certs,
+            mocked_add_cert_and_key,
             mocked_get_aws_certificate_chain,
             mocked_generate_truststore,
             mocked_generate_keystore,
-            mocked_parse_trusted_cert_arg,
-            mocked_add_cert_and_key,
-            mocked_add_ca_certs
+            mocked_parse_trusted_cert_arg
     ):
 
         # Given
@@ -239,7 +242,10 @@ class TestRetriever(unittest.TestCase):
             dummy_certs_data
         )
 
-        mocked_add_ca_certs.assert_called_once()
+        mocked_add_ca_certs.assert_called_once_with(
+            s3_client,
+            dummy_certs_data
+        )
 
 
 if __name__ == '__main__':
