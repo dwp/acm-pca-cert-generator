@@ -147,9 +147,6 @@ def add_cert_and_key(
         with open("/etc/pki/tls/certs/" + alias + ".crt", "a") as f:
             f.write(cert)
 
-    logger.info("Updating CA trust")
-    os.system("update-ca-trust")
-
 
 def parse_s3_url(url):
     """Extract the S3 bucket name and key from a given S3 URL.

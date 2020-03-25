@@ -114,3 +114,7 @@ venv.bak/
 
 # Concourse CI
 aviator_pipeline.yml
+
+# Terraform
+ci/.terraform
+ci/terraform.*
