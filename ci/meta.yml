@@ -10,7 +10,6 @@ meta:
             repository: ((terraform.repository))
             version: ((terraform12.version))
             tag: ((terraform12.version))
-            
         params:
           AWS_ACCESS_KEY_ID: ((ci.aws_access_key_id))
           AWS_SECRET_ACCESS_KEY: ((ci.aws_secret_access_key))
