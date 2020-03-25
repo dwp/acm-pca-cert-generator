@@ -16,6 +16,22 @@ subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
 pem_type = OpenSSL.crypto.FILETYPE_PEM
 
 
+def str2bool(v):
+    """Parse the supplied command line arguments into a boolean.
+
+    Returns:
+        Boolean: The parsed and validated command line arguments. Defaults to False.
+
+    """
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', '1'):
+        return True
+    elif v.lower() in ('no', 'false', '0'):
+        return False
+    else:
+        raise configargparse.ArgumentTypeError('Boolean value expected.')
+
 def check_key_length(value):
     """Check that a valid key length has been provided.
 
@@ -250,7 +266,7 @@ def parse_args(args):
         type=str2bool,
         env_var="CERTGEN_JKS_ONLY",
         help="Only generate the Java KeyStores; don't update the OS trustchains "
-            "(which requires this utility to be run as root)"
+             "(which requires this utility to be run as root)"
     )
     p.add(
         "--log-level",

@@ -119,7 +119,7 @@ def parse_args(args):
         type=str2bool,
         env_var="RETRIEVER_JKS_ONLY",
         help="Only generate the Java KeyStores; don't update the OS trustchains "
-            "(which requires this utility to be run as root)"
+             "(which requires this utility to be run as root)"
     )
     p.add(
         "--log-level",
@@ -253,7 +253,7 @@ def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
     if (args.keystore_path is not None) and (args.truststore_path is not None):
         create_stores(args, cert_and_key, s3_util, truststore_util)
 
-    if  not args.jks_only:
+    if not args.jks_only:
         update_os_ca_trust(s3_util, truststore_util, args, cert_and_key)
 
 
