@@ -32,6 +32,7 @@ def str2bool(v):
     else:
         raise configargparse.ArgumentTypeError('Boolean value expected.')
 
+
 def check_key_length(value):
     """Check that a valid key length has been provided.
 
