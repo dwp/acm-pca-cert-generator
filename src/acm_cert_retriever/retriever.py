@@ -115,7 +115,7 @@ def parse_args(args):
     )
     p.add(
         "--jks-only",
-        default=False
+        default=False,
         type=str2bool,
         env_var="RETRIEVER_JKS_ONLY",
         help="Only generate the Java KeyStores; don't update the OS trustchains "
