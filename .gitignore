@@ -116,5 +116,7 @@ venv.bak/
 aviator_pipeline.yml
 
 # Terraform
-ci/.terraform
-ci/terraform.*
+**/.terraform/
+**/*.tfvars
+**/*.tfstate
+**/*.tfstate*
