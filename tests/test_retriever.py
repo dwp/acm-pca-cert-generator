@@ -30,6 +30,7 @@ template_args = {
     "truststore_password": "my-truststore-password",
     "truststore_aliases": "my-truststore-aliases",
     "truststore_certs": "my-truststore-certs",
+    "jks_only": "False",
     "log_level": "ANY"
 }
 

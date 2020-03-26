@@ -114,6 +114,14 @@ def parse_args(args):
              "entries in the Java TrustStore",
     )
     p.add(
+        "--jks-only",
+        default=False,
+        type=str2bool,
+        env_var="RETRIEVER_JKS_ONLY",
+        help="Only generate the Java KeyStores; don't update the OS trustchains "
+             "(which requires this utility to be run as root)"
+    )
+    p.add(
         "--log-level",
         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
         default="INFO",
@@ -201,10 +209,10 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     logger.info("Created KeyStore and TrustStore")
 
 
-def update_ca_trust(
+def update_os_ca_trust(
     s3_util, truststore_util, args, cert_and_key
 ):
-    """Place retrieved key and cert in ca trust.
+    """Place retrieved key and cert in the OS CA trust chain.
 
     Args:
         s3_util (Object): The boto3 utility to use
@@ -245,7 +253,8 @@ def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
     if (args.keystore_path is not None) and (args.truststore_path is not None):
         create_stores(args, cert_and_key, s3_util, truststore_util)
 
-    update_ca_trust(s3_util, truststore_util, args, cert_and_key)
+    if not args.jks_only:
+        update_os_ca_trust(s3_util, truststore_util, args, cert_and_key)
 
 
 def _main(args):

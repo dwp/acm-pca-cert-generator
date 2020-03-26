@@ -16,6 +16,23 @@ subject_name_parts = ["C", "ST", "L", "O", "OU", "CN", "emailAddress"]
 pem_type = OpenSSL.crypto.FILETYPE_PEM
 
 
+def str2bool(v):
+    """Parse the supplied command line arguments into a boolean.
+
+    Returns:
+        Boolean: The parsed and validated command line arguments. Defaults to False.
+
+    """
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', '1'):
+        return True
+    elif v.lower() in ('no', 'false', '0'):
+        return False
+    else:
+        raise configargparse.ArgumentTypeError('Boolean value expected.')
+
+
 def check_key_length(value):
     """Check that a valid key length has been provided.
 
@@ -245,6 +262,14 @@ def parse_args(args):
              "entries in the Java TrustStore",
     )
     p.add(
+        "--jks-only",
+        default=False,
+        type=str2bool,
+        env_var="CERTGEN_JKS_ONLY",
+        help="Only generate the Java KeyStores; don't update the OS trustchains "
+             "(which requires this utility to be run as root)"
+    )
+    p.add(
         "--log-level",
         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
         default="INFO",
@@ -417,15 +442,15 @@ def generate_key_and_cert(
         generate_key_and_trust_store(s3_util, truststore_util, args,
                                      key, cert_and_chain)
 
-    update_ca_trust(s3_util, truststore_util, args,
-                    key, cert_and_chain)
+    if not args.jks_only:
+        update_os_ca_trust(s3_util, truststore_util, args, key, cert_and_chain)
 
 
-def update_ca_trust(
+def update_os_ca_trust(
     s3_util, truststore_util, args,
     key, cert_and_chain
 ):
-    """Place generated key and cert in ca trust.
+    """Place generated key and cert in OS CA trust.
 
     Args:
         s3_util (Object): The boto3 utility to use
