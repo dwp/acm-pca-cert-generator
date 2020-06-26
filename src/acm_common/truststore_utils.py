@@ -14,7 +14,7 @@ except ImportError:
 
 
 logger = logging.getLogger("truststore")
-certificate_suffix = '-----END CERTIFICATE-----'
+certificate_suffix = "-----END CERTIFICATE-----"
 
 
 def get_aws_certificate_chain(all_aws_data):
@@ -27,10 +27,10 @@ def get_aws_certificate_chain(all_aws_data):
         list: A list of base 64 encoded certs in order
 
     """
-    downloaded_cert = all_aws_data['Certificate']
+    downloaded_cert = all_aws_data["Certificate"]
     cert_chain = [downloaded_cert]
 
-    downloaded_chain = all_aws_data['CertificateChain'].split(certificate_suffix)
+    downloaded_chain = all_aws_data["CertificateChain"].split(certificate_suffix)
     downloaded_chain.pop()
 
     for index in range(len(downloaded_chain)):
@@ -125,9 +125,7 @@ def generate_keystore(
     logger.info("Java KeyStore generated")
 
 
-def add_cert_and_key(
-    priv_key, cert_list, alias
-):
+def add_cert_and_key(priv_key, cert_list, alias):
     """Add certificate and private key.
 
     Args:
@@ -185,15 +183,16 @@ def fetch_cert(source, entry, s3_client):
         bucket_and_key = parse_s3_url(entry)
         logger.info("...reading s3 source = {}".format(bucket_and_key))
         pem_cert = s3_client.get_object(
-            Bucket=bucket_and_key["bucket"],
-            Key=bucket_and_key["key"])
+            Bucket=bucket_and_key["bucket"], Key=bucket_and_key["key"]
+        )
         pem_cert_body = pem_cert["Body"].read()
     elif source == "memory":
         logger.info("...reading from memory")
         pem_cert_body = entry
     else:
-        raise ValueError("Invalid cert entry type {}, "
-                         "must be one of s3, memory".format(source))
+        raise ValueError(
+            "Invalid cert entry type {}, " "must be one of s3, memory".format(source)
+        )
 
     return pem_cert_body
 

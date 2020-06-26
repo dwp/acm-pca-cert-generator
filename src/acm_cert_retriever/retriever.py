@@ -23,12 +23,12 @@ def str2bool(v):
     """
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', '1'):
+    if v.lower() in ("yes", "true", "1"):
         return True
-    elif v.lower() in ('no', 'false', '0'):
+    elif v.lower() in ("no", "false", "0"):
         return False
     else:
-        raise configargparse.ArgumentTypeError( 'Boolean value expected.' )
+        raise configargparse.ArgumentTypeError("Boolean value expected.")
 
 
 def parse_args(args):
@@ -63,7 +63,7 @@ def parse_args(args):
         type=str2bool,
         env_var="RETRIEVER_ADD_DOWNLOADED_CHAIN",
         help="Whether or not to add the downloaded cert chain from the ARN "
-             "to the key store. Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'",
+        "to the key store. Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'",
     )
     p.add(
         "--keystore-path",
@@ -111,7 +111,7 @@ def parse_args(args):
         required=True,
         env_var="RETRIEVER_TRUSTSTORE_CERTS",
         help="Comma-separated list of S3 URIs pointing at certificates to use for "
-             "entries in the Java TrustStore",
+        "entries in the Java TrustStore",
     )
     p.add(
         "--jks-only",
@@ -119,7 +119,7 @@ def parse_args(args):
         type=str2bool,
         env_var="RETRIEVER_JKS_ONLY",
         help="Only generate the Java KeyStores; don't update the OS trustchains "
-             "(which requires this utility to be run as root)"
+        "(which requires this utility to be run as root)",
     )
     p.add(
         "--log-level",
@@ -151,16 +151,17 @@ def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
     logger.info("Retrieving cert and key from AWS...")
     try:
         all_data = acm_util.export_certificate(
-            CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase)
+            CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase
+        )
     except Exception as e:
         logger.exception("Failed to fetch {}: Error = {}".format(acm_cert_arn, e))
         raise e
     else:
         logger.info("...cert and key exported from AWS")
 
-    encrypted_key = rsa_util.import_key(all_data['PrivateKey'], acm_key_passphrase)
+    encrypted_key = rsa_util.import_key(all_data["PrivateKey"], acm_key_passphrase)
     decrypted_key = encrypted_key.export_key()
-    all_data['PrivateKey'] = decrypted_key
+    all_data["PrivateKey"] = decrypted_key
 
     logger.info("Retrieved cert and key from AWS and decrypted the key")
     return all_data
@@ -185,15 +186,17 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     logger.info("Creating KeyStore and TrustStore")
 
     if args.add_downloaded_chain_to_keystore:
-        keystore_cert_list = truststore_util.get_aws_certificate_chain(cert_and_key_data)
+        keystore_cert_list = truststore_util.get_aws_certificate_chain(
+            cert_and_key_data
+        )
     else:
-        keystore_cert = cert_and_key_data['Certificate']
+        keystore_cert = cert_and_key_data["Certificate"]
         keystore_cert_list = [keystore_cert]
 
     truststore_util.generate_keystore(
         args.keystore_path,
         args.keystore_password,
-        cert_and_key_data['PrivateKey'],
+        cert_and_key_data["PrivateKey"],
         keystore_cert_list,
         args.private_key_alias,
         args.private_key_password,
@@ -209,9 +212,7 @@ def create_stores(args, cert_and_key_data, s3_util, truststore_util):
     logger.info("Created KeyStore and TrustStore")
 
 
-def update_os_ca_trust(
-    s3_util, truststore_util, args, cert_and_key
-):
+def update_os_ca_trust(s3_util, truststore_util, args, cert_and_key):
     """Place retrieved key and cert in the OS CA trust chain.
 
     Args:
@@ -220,21 +221,22 @@ def update_os_ca_trust(
         args (Object): The parsed command line arguments
         cert_and_key (Object): The retrieved certificate and key
     """
-    truststore_util.add_cert_and_key(cert_and_key["PrivateKey"],
-                                     [cert_and_key["Certificate"]],
-                                     args.private_key_alias)
+    truststore_util.add_cert_and_key(
+        cert_and_key["PrivateKey"],
+        [cert_and_key["Certificate"]],
+        args.private_key_alias,
+    )
 
     trusted_certs = truststore_util.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
 
-    truststore_util.add_ca_certs(
-        s3_util, trusted_certs
-    )
+    truststore_util.add_ca_certs(s3_util, trusted_certs)
 
 
-def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
-                                          rsa_util, args):
+def retrieve_key_and_cert_and_make_stores(
+    acm_util, s3_util, truststore_util, rsa_util, args
+):
     """Create a Keystore and Truststore from AWS data.
 
     Args:
@@ -245,10 +247,9 @@ def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
         args (Object): The parsed command line arguments
 
     """
-    cert_and_key = retrieve_key_and_cert(acm_util,
-                                         rsa_util,
-                                         args.acm_cert_arn,
-                                         args.acm_key_passphrase)
+    cert_and_key = retrieve_key_and_cert(
+        acm_util, rsa_util, args.acm_cert_arn, args.acm_key_passphrase
+    )
 
     if (args.keystore_path is not None) and (args.truststore_path is not None):
         create_stores(args, cert_and_key, s3_util, truststore_util)
@@ -260,11 +261,9 @@ def retrieve_key_and_cert_and_make_stores(acm_util, s3_util, truststore_util,
 def _main(args):
     args = parse_args(args)
     logger_utils.setup_logging(logger, args.log_level)
-    retrieve_key_and_cert_and_make_stores(acm_client,
-                                          s3_client,
-                                          truststore_utils,
-                                          RSA,
-                                          args)
+    retrieve_key_and_cert_and_make_stores(
+        acm_client, s3_client, truststore_utils, RSA, args
+    )
 
 
 def main():

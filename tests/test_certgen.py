@@ -27,7 +27,9 @@ valid_subject_details = {
 
 
 def make_tuple(some_args_dict):
-    return namedtuple("DummyParsedArgs", some_args_dict.keys())(*some_args_dict.values())
+    return namedtuple("DummyParsedArgs", some_args_dict.keys())(
+        *some_args_dict.values()
+    )
 
 
 subject_args = {
@@ -37,7 +39,7 @@ subject_args = {
     "subject_o": "organisation",
     "subject_ou": "org",
     "subject_cn": "host",
-    "subject_emailaddress": "email"
+    "subject_emailaddress": "email",
 }
 
 
@@ -45,9 +47,13 @@ def test_gather_subjects():
     sample_args = make_tuple(subject_args)
     result = certgen.gather_subjects(sample_args)
     assert result == {
-        'C': 'country', 'CN': 'host', 'L': 'city',
-        'O': 'organisation', 'OU': 'org', 'ST': 'state',
-        'emailAddress': 'email'
+        "C": "country",
+        "CN": "host",
+        "L": "city",
+        "O": "organisation",
+        "OU": "org",
+        "ST": "state",
+        "emailAddress": "email",
     }
 
 

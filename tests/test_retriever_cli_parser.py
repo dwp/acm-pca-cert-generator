@@ -71,19 +71,19 @@ def test_parse_args_for_retrieve_cert_add_downloaded_chain_to_keystore_is_option
 
 def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_env_vars():
 
-    os.environ['RETRIEVER_ACM_CERT_ARN'] = "A"
-    os.environ['RETRIEVER_ACM_KEY_PASSPHRASE'] = "B"
+    os.environ["RETRIEVER_ACM_CERT_ARN"] = "A"
+    os.environ["RETRIEVER_ACM_KEY_PASSPHRASE"] = "B"
     # Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'
-    os.environ['RETRIEVER_ADD_DOWNLOADED_CHAIN'] = "false"
-    os.environ['RETRIEVER_KEYSTORE_PATH'] = "D"
-    os.environ['RETRIEVER_KEYSTORE_PASSWORD'] = "E"
-    os.environ['RETRIEVER_PRIVATE_KEY_ALIAS'] = "F"
-    os.environ['RETRIEVER_PRIVATE_KEY_PASSWORD'] = "G"
-    os.environ['RETRIEVER_TRUSTSTORE_PATH'] = "H"
-    os.environ['RETRIEVER_TRUSTSTORE_PASSWORD'] = "I"
-    os.environ['RETRIEVER_TRUSTSTORE_ALIASES'] = "J"
-    os.environ['RETRIEVER_TRUSTSTORE_CERTS'] = "K"
-    os.environ['RETRIEVER_LOG_LEVEL'] = "CRITICAL"
+    os.environ["RETRIEVER_ADD_DOWNLOADED_CHAIN"] = "false"
+    os.environ["RETRIEVER_KEYSTORE_PATH"] = "D"
+    os.environ["RETRIEVER_KEYSTORE_PASSWORD"] = "E"
+    os.environ["RETRIEVER_PRIVATE_KEY_ALIAS"] = "F"
+    os.environ["RETRIEVER_PRIVATE_KEY_PASSWORD"] = "G"
+    os.environ["RETRIEVER_TRUSTSTORE_PATH"] = "H"
+    os.environ["RETRIEVER_TRUSTSTORE_PASSWORD"] = "I"
+    os.environ["RETRIEVER_TRUSTSTORE_ALIASES"] = "J"
+    os.environ["RETRIEVER_TRUSTSTORE_CERTS"] = "K"
+    os.environ["RETRIEVER_LOG_LEVEL"] = "CRITICAL"
 
     result = retriever.parse_args("")
 
@@ -101,4 +101,3 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_en
     assert result.truststore_aliases == "J"
     assert result.truststore_certs == "K"
     assert result.log_level == "CRITICAL"
-
