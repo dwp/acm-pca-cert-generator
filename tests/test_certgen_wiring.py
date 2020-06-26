@@ -22,7 +22,9 @@ valid_subject_details = {
 
 
 def make_tuple(some_args_dict):
-    return namedtuple("DummyParsedArgs", some_args_dict.keys())(*some_args_dict.values())
+    return namedtuple("DummyParsedArgs", some_args_dict.keys())(
+        *some_args_dict.values()
+    )
 
 
 template_args = {
@@ -39,7 +41,7 @@ template_args = {
     "keystore_path": "my-keystore-path",
     "keystore_password": "my-keystore-password",
     "ca_arn": "my-ca-arn",
-    "signing_algorithm" : "my-signing-algorithm",
+    "signing_algorithm": "my-signing-algorithm",
     "validity_period": "my-validity-period",
     "private_key_alias": "my-key-alias",
     "private_key_password": "my-key-password",
@@ -48,21 +50,15 @@ template_args = {
     "truststore_aliases": "my-truststore-aliases",
     "truststore_certs": "my-truststore-certs",
     "jks_only": "true",
-    "log_level": "ANY"
+    "log_level": "ANY",
 }
 
-dummy_certs_data = [
-    {"alias": "a1", "cert": "c1", "source": "s1"}
-]
+dummy_certs_data = [{"alias": "a1", "cert": "c1", "source": "s1"}]
 
-created_cert_data = {
-    'Certificate': 'created-cert',
-    'CertificateChain': 'created-chain'
-}
+created_cert_data = {"Certificate": "created-cert", "CertificateChain": "created-chain"}
 
 
 class TestCertGen(unittest.TestCase):
-
     def test_generate_key_and_cert_will_use_acmpca_and_make_stores(self):
         # Given
         sample_args = make_tuple(template_args)
@@ -93,8 +89,13 @@ class TestCertGen(unittest.TestCase):
 
         # When
         certgen.generate_key_and_cert(
-            acmpca_client, s3_client, mock_truststore_utils, sample_args,
-            mock_generate_private_key, mock_generate_csr, mock_sign_cert
+            acmpca_client,
+            s3_client,
+            mock_truststore_utils,
+            sample_args,
+            mock_generate_private_key,
+            mock_generate_csr,
+            mock_sign_cert,
         )
 
         # Then
@@ -104,27 +105,33 @@ class TestCertGen(unittest.TestCase):
             mock_private_key,
             "my-digest-algorithm",
             {
-                'C': 'my-country', 'ST': 'my-state', 'L': 'my-city', 'O': 'my-organisation',
-                'OU': 'my-org', 'CN': 'my-host', 'emailAddress': 'my-email'
-            }
+                "C": "my-country",
+                "ST": "my-state",
+                "L": "my-city",
+                "O": "my-organisation",
+                "OU": "my-org",
+                "CN": "my-host",
+                "emailAddress": "my-email",
+            },
         )
 
         mock_sign_cert.assert_called_once_with(
-            acmpca_client, "my-ca-arn", mock_csr,
-            "my-signing-algorithm", "my-validity-period")
+            acmpca_client,
+            "my-ca-arn",
+            mock_csr,
+            "my-signing-algorithm",
+            "my-validity-period",
+        )
 
         mock_truststore_utils.generate_keystore.assert_called_once_with(
             "my-keystore-path",
             "my-keystore-password",
             mock_private_key,
-            ['created-cert'],
+            ["created-cert"],
             "my-key-alias",
-            "my-key-password"
+            "my-key-password",
         )
 
         mock_truststore_utils.generate_truststore.assert_called_once_with(
-            s3_client,
-            "my-truststore-path",
-            "my-truststore-password",
-            dummy_certs_data
+            s3_client, "my-truststore-path", "my-truststore-password", dummy_certs_data
         )

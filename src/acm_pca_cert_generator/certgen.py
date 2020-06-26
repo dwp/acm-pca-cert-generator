@@ -25,12 +25,12 @@ def str2bool(v):
     """
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', '1'):
+    if v.lower() in ("yes", "true", "1"):
         return True
-    elif v.lower() in ('no', 'false', '0'):
+    elif v.lower() in ("no", "false", "0"):
         return False
     else:
-        raise configargparse.ArgumentTypeError('Boolean value expected.')
+        raise configargparse.ArgumentTypeError("Boolean value expected.")
 
 
 def check_key_length(value):
@@ -185,12 +185,7 @@ def parse_args(args):
         env_var="CERTGEN_SUBJECT_EMAILADDRESS",
         help="Certificate subject email address",
     )
-    p.add(
-        "--ca-arn",
-        required=True,
-        env_var="CERTGEN_CA_ARN",
-        help="ACM PCA ARN"
-    )
+    p.add("--ca-arn", required=True, env_var="CERTGEN_CA_ARN", help="ACM PCA ARN")
     p.add(
         "--signing-algorithm",
         choices=[
@@ -259,7 +254,7 @@ def parse_args(args):
         required=True,
         env_var="CERTGEN_TRUSTSTORE_CERTS",
         help="Comma-separated list of S3 URIs pointing at certificates to use for "
-             "entries in the Java TrustStore",
+        "entries in the Java TrustStore",
     )
     p.add(
         "--jks-only",
@@ -267,7 +262,7 @@ def parse_args(args):
         type=str2bool,
         env_var="CERTGEN_JKS_ONLY",
         help="Only generate the Java KeyStores; don't update the OS trustchains "
-             "(which requires this utility to be run as root)"
+        "(which requires this utility to be run as root)",
     )
     p.add(
         "--log-level",
@@ -415,8 +410,13 @@ def gather_subjects(args):
 
 
 def generate_key_and_cert(
-        acmpca_util, s3_util, truststore_util, args,
-        fn_generate_private_key, fn_generate_csr, fn_sign_cert
+    acmpca_util,
+    s3_util,
+    truststore_util,
+    args,
+    fn_generate_private_key,
+    fn_generate_csr,
+    fn_sign_cert,
 ):
     """Generate a key and cert in ACM PCA.
 
@@ -439,17 +439,15 @@ def generate_key_and_cert(
     )
 
     if (args.keystore_path is not None) and (args.truststore_path is not None):
-        generate_key_and_trust_store(s3_util, truststore_util, args,
-                                     key, cert_and_chain)
+        generate_key_and_trust_store(
+            s3_util, truststore_util, args, key, cert_and_chain
+        )
 
     if not args.jks_only:
         update_os_ca_trust(s3_util, truststore_util, args, key, cert_and_chain)
 
 
-def update_os_ca_trust(
-    s3_util, truststore_util, args,
-    key, cert_and_chain
-):
+def update_os_ca_trust(s3_util, truststore_util, args, key, cert_and_chain):
     """Place generated key and cert in OS CA trust.
 
     Args:
@@ -460,24 +458,17 @@ def update_os_ca_trust(
         cert_and_chain (Object): The generated certificate chain
     """
     truststore_util.add_cert_and_key(
-        key,
-        [cert_and_chain["Certificate"]],
-        args.private_key_alias
+        key, [cert_and_chain["Certificate"]], args.private_key_alias
     )
 
     trusted_certs = truststore_util.parse_trusted_cert_arg(
         args.truststore_aliases, args.truststore_certs
     )
 
-    truststore_util.add_ca_certs(
-        s3_util, trusted_certs
-    )
+    truststore_util.add_ca_certs(s3_util, trusted_certs)
 
 
-def generate_key_and_trust_store(
-    s3_util, truststore_util, args,
-    key, cert_and_chain
-):
+def generate_key_and_trust_store(s3_util, truststore_util, args, key, cert_and_chain):
     """Place generated key and cert in keystore and truststore.
 
     Args:
@@ -511,8 +502,15 @@ def _main(args):
 
     acmpca_client = boto3.client("acm-pca")
     s3_client = boto3.client("s3")
-    generate_key_and_cert(acmpca_client, s3_client, truststore_utils, args,
-                          generate_private_key, generate_csr, sign_cert)
+    generate_key_and_cert(
+        acmpca_client,
+        s3_client,
+        truststore_utils,
+        args,
+        generate_private_key,
+        generate_csr,
+        sign_cert,
+    )
 
 
 def main():

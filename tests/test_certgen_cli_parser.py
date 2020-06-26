@@ -98,27 +98,27 @@ def test_parse_args_for_certgen_will_return_valid_args_when_given_correct_list()
 
 def test_parse_args_for_certgen_will_return_valid_args_when_given_valid_env_vars():
 
-    os.environ['CERTGEN_KEY_TYPE'] = 'DSA'
-    os.environ['CERTGEN_KEY_LENGTH'] = '8192'
-    os.environ['CERTGEN_KEY_DIGEST_ALGORITHM'] = 'sha384'
-    os.environ['CERTGEN_SUBJECT_C'] = 'A'
-    os.environ['CERTGEN_SUBJECT_ST'] = 'B'
-    os.environ['CERTGEN_SUBJECT_L'] = 'C'
-    os.environ['CERTGEN_SUBJECT_O'] = 'D'
-    os.environ['CERTGEN_SUBJECT_OU'] = 'E'
-    os.environ['CERTGEN_SUBJECT_EMAILADDRESS'] = 'F'
-    os.environ['CERTGEN_CA_ARN'] = 'G'
-    os.environ['CERTGEN_SIGNING_ALGORITHM'] = 'SHA512WITHRSA'
-    os.environ['CERTGEN_VALIDITY_PERIOD'] = '22y'
-    os.environ['CERTGEN_KEYSTORE_PATH'] = 'H'
-    os.environ['CERTGEN_KEYSTORE_PASSWORD'] = 'I'
-    os.environ['CERTGEN_PRIVATE_KEY_ALIAS'] = 'J'
-    os.environ['CERTGEN_PRIVATE_KEY_PASSWORD'] = 'K'
-    os.environ['CERTGEN_TRUSTSTORE_PATH'] = 'L'
-    os.environ['CERTGEN_TRUSTSTORE_PASSWORD'] = 'M'
-    os.environ['CERTGEN_TRUSTSTORE_ALIASES'] = 'N'
-    os.environ['CERTGEN_TRUSTSTORE_CERTS'] = 'O'
-    os.environ['CERTGEN_LOG_LEVEL'] = 'CRITICAL'
+    os.environ["CERTGEN_KEY_TYPE"] = "DSA"
+    os.environ["CERTGEN_KEY_LENGTH"] = "8192"
+    os.environ["CERTGEN_KEY_DIGEST_ALGORITHM"] = "sha384"
+    os.environ["CERTGEN_SUBJECT_C"] = "A"
+    os.environ["CERTGEN_SUBJECT_ST"] = "B"
+    os.environ["CERTGEN_SUBJECT_L"] = "C"
+    os.environ["CERTGEN_SUBJECT_O"] = "D"
+    os.environ["CERTGEN_SUBJECT_OU"] = "E"
+    os.environ["CERTGEN_SUBJECT_EMAILADDRESS"] = "F"
+    os.environ["CERTGEN_CA_ARN"] = "G"
+    os.environ["CERTGEN_SIGNING_ALGORITHM"] = "SHA512WITHRSA"
+    os.environ["CERTGEN_VALIDITY_PERIOD"] = "22y"
+    os.environ["CERTGEN_KEYSTORE_PATH"] = "H"
+    os.environ["CERTGEN_KEYSTORE_PASSWORD"] = "I"
+    os.environ["CERTGEN_PRIVATE_KEY_ALIAS"] = "J"
+    os.environ["CERTGEN_PRIVATE_KEY_PASSWORD"] = "K"
+    os.environ["CERTGEN_TRUSTSTORE_PATH"] = "L"
+    os.environ["CERTGEN_TRUSTSTORE_PASSWORD"] = "M"
+    os.environ["CERTGEN_TRUSTSTORE_ALIASES"] = "N"
+    os.environ["CERTGEN_TRUSTSTORE_CERTS"] = "O"
+    os.environ["CERTGEN_LOG_LEVEL"] = "CRITICAL"
 
     result = certgen.parse_args("")
 
@@ -263,4 +263,3 @@ def missing_arg_test_missing_truststore_certs():
             "s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem",
         ]
     )
-
