@@ -28,7 +28,7 @@ def str2bool(v):
     elif v.lower() in ('no', 'false', '0'):
         return False
     else:
-        raise configargparse.ArgumentTypeError('Boolean value expected.')
+        raise configargparse.ArgumentTypeError( 'Boolean value expected.' )
 
 
 def parse_args(args):
