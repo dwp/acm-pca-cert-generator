@@ -12,6 +12,6 @@ spruce:
     to: aviator_pipeline.yml
 fly:
   name: asset-mgmt-acm-pca-cert-generator
-  target: concourse
+  target: aws-concourse
   expose: true
   config: aviator_pipeline.yml
