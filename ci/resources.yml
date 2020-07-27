@@ -6,7 +6,7 @@ resources:
     uri: https://((dataworks.enterprise_github_url))/dip/aws-management-infrastructure.git
     username: ((dataworks.enterprise_github_username))
     password: ((dataworks-secrets.enterprise_github_pat))
-  check_every: 720h
+  check_every: 1h
   webhook_token: ((dataworks.concourse_github_webhook_token))
 - name: acm-pca-cert-generator
   type: github-release
@@ -14,6 +14,7 @@ resources:
     owner: dwp
     repository: acm-pca-cert-generator
     access_token: ((dataworks-secrets.concourse_github_pat))
-  check_every: 3m
+  check_every: 720h
+  webhook_token: ((dataworks.concourse_github_webhook_token))
 
 
