@@ -36,6 +36,5 @@ jobs:
               - -exc
               - |
                 source /assume-role
-                set +x
                 export BUCKET=`cat bucket_name/bucket_name`
                 aws s3 cp ${ARTEFACT_DIR}/*.tar.gz s3://${BUCKET}/${ARTEFACT_DIR}/
