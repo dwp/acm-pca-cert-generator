@@ -14,31 +14,28 @@ jobs:
           globs:
             - "*.tar.gz"
       - .: (( inject meta.plan.terraform-output ))
-      - .: (( inject meta.plan.create-aws-profiles ))
       - task: mirror-acm-pca-cert-generator
         config:
           platform: linux
           image_resource:
             type: docker-image
             source:
-              repository: ((docker-awscli.repository))
-              version: ((docker-awscli.version))
-              tag: ((docker-awscli.version))
+              repository: ((dataworks.docker_awscli_repository))
+              version: ((dataworks.docker_awscli_version))
+              tag: ((dataworks.docker_awscli_version))
           inputs:
             - name: bucket_name
-            - name: .aws
             - name: acm-pca-cert-generator
           params:
-            AWS_PROFILE: ci
-            AWS_SHARED_CREDENTIALS_FILE: .aws/credentials
-            AWS_CONFIG_FILE: .aws/config
             ARTEFACT_DIR: "acm-pca-cert-generator"
+            AWS_ROLE_ARN: arn:aws:iam::((dataworks.aws_management_acc)):role/ci
+            AWS_DEFAULT_REGION: ((dataworks.aws_region))
           run:
             path: sh
             args:
               - -exc
               - |
-                AWS_SHARED_CREDENTIALS_FILE="${PWD}/${AWS_SHARED_CREDENTIALS_FILE}"
-                AWS_CONFIG_FILE="${PWD}/${AWS_CONFIG_FILE}"
+                source /assume-role
+                set +x
                 export BUCKET=`cat bucket_name/bucket_name`
                 aws s3 cp ${ARTEFACT_DIR}/*.tar.gz s3://${BUCKET}/${ARTEFACT_DIR}/
