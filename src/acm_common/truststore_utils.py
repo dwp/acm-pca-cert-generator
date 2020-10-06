@@ -139,7 +139,7 @@ def add_cert_and_key(priv_key, cert_list, alias):
     logger.info("Writing certificate and private key to filesystem")
 
     with open("/etc/pki/tls/private/" + alias + ".key", "a") as f:
-        f.write(str(priv_key))
+        f.write(priv_key)
 
     for cert in cert_list:
         with open("/etc/pki/tls/certs/" + alias + ".crt", "a") as f:
@@ -266,11 +266,11 @@ def add_ca_certs(s3_client, certs):
         source = cert_entry["source"]
         logger.info("...Processing cert with alias = {} from {}".format(alias, source))
 
-        pem_cert_body = fetch_cert(source, entry, s3_client)
+        pem_cert_body = fetch_cert(source, entry, s3_client).decode("utf-8")
         logger.debug("...cert body = {}".format(pem_cert_body))
 
         with open("/etc/pki/ca-trust/source/anchors/" + alias + ".crt", "a") as f:
-            f.write(str(pem_cert_body))
+            f.write(pem_cert_body + "\n")
 
     logger.info("Updating CA trust")
     os.system("update-ca-trust")

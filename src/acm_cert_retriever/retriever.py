@@ -160,7 +160,7 @@ def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
         logger.info("...cert and key exported from AWS")
 
     encrypted_key = rsa_util.import_key(all_data["PrivateKey"], acm_key_passphrase)
-    decrypted_key = encrypted_key.export_key()
+    decrypted_key = encrypted_key.export_key().decode("utf-8")
     all_data["PrivateKey"] = decrypted_key
 
     logger.info("Retrieved cert and key from AWS and decrypted the key")
