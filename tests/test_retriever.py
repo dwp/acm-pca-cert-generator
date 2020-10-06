@@ -131,16 +131,16 @@ class TestRetriever(unittest.TestCase):
         truststore_utils.add_ca_certs = MagicMock()
         rsa_util.import_key.return_value = dummy_rsakey_object
         dummy_rsakey_object.export_key = MagicMock()
-        dummy_rsakey_object.export_key.return_value = "in-memory-decrypted-key"
+        dummy_rsakey_object.export_key.return_value = b"in-memory-decrypted-key"
 
         s3_client = MagicMock()
 
         mocked_parse_trusted_cert_arg.return_value = dummy_certs_data
 
         mocked_get_aws_certificate_chain.return_value = [
-            "downloaded-cert",
-            "cert-1",
-            "cert-2",
+            b"downloaded-cert",
+            b"cert-1",
+            b"cert-2",
         ]
 
         # When
@@ -163,7 +163,7 @@ class TestRetriever(unittest.TestCase):
             "my-keystore-path",
             "my-keystore-password",
             "in-memory-decrypted-key",
-            ["downloaded-cert", "cert-1", "cert-2"],
+            [b"downloaded-cert", b"cert-1", b"cert-2"],
             "my-key-alias",
             "my-key-password",
         )
@@ -206,7 +206,7 @@ class TestRetriever(unittest.TestCase):
         dummy_rsakey_object = MagicMock()
         rsa_util.import_key.return_value = dummy_rsakey_object
         dummy_rsakey_object.export_key = MagicMock()
-        dummy_rsakey_object.export_key.return_value = "in-memory-decrypted-key"
+        dummy_rsakey_object.export_key.return_value = b"in-memory-decrypted-key"
 
         s3_client = MagicMock()
 
