@@ -28,7 +28,7 @@ $ python setup.py build install
 ```
 
 The installation command above will place two commands in your path, `acm-cert-retriever`  and
-`acm-pca-cert-generator`.  Each script takes a number of command line arguments, most of 
+`acm-pca-cert-generator`.  Each script takes a number of command line arguments, most of
 which are mandatory. Alternatively, the same information can be specified using environment variables.
 
 
@@ -48,7 +48,7 @@ Note that if you only want to dev/test locally, you don't need to run this.
 
 
 ## acm-cert-retriever
-`acm-cert-retriever` generates a Java KeyStore containing a keypair and cert it has fetched 
+`acm-cert-retriever` generates a Java KeyStore containing a keypair and cert it has fetched
 from ACM, and a Java TrustStore containing one or more trusted certificates held on S3.
 
 
@@ -64,8 +64,8 @@ The AWS services that call this script need the following permissions:
 ### Running
 
 The installation command above will place an `acm-cert-retriever` command in
-your path. 
-The script takes a number of command line arguments, most of which are mandatory. 
+your path.
+The script takes a number of command line arguments, most of which are mandatory.
 Alternatively, the same information can be specified using environment variables:
 The help text is the authoritative source for this:
 
@@ -116,8 +116,8 @@ The AWS services that call this script need the following permissions:
 ### Running
 
 The installation command above will place an `acm-pca-cert-generator` command in
-your path. 
-The script takes a number of command line arguments, most of which are mandatory. 
+your path.
+The script takes a number of command line arguments, most of which are mandatory.
 Alternatively, the same information can be specified using environment variables:
 The help text is the authoritative source for this:
 
@@ -153,3 +153,41 @@ acm-pca-cert-generator \
 --truststore-aliases ca1,ca2 \
 --truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem
 ```
+
+In this example, the certificate is being generated via Terraform instead of
+via `acm-pca-cert-generator`. It is then retrived and placed in the OS
+certificate and key stores only, not in a Java KeyStore:
+
+Terraform:
+```
+resource "aws_acm_certificate" "tarball_ingestion" {
+     certificate_authority_arn = data.terraform_remote_state.certificate_authority.outputs.root_ca.arn
+     domain_name               = "${local.tarball_ingestion_name}.${local.env_prefix[local.environment]}dataworks.dwp.gov.uk"
+
+     options {
+       certificate_transparency_logging_preference = "DISABLED"
+     }
+
+     tags = merge(
+       local.common_tags,
+       {
+         Name = "tarball-ingester-cert"
+       },
+     )
+   }
+```
+
+ACM call:
+
+```
+ACM_KEY_PASSWORD=$(uuidgen -r)
+
+acm-cert-retriever \
+--acm-cert-arn "${acm_cert_arn}" \
+--acm-key-passphrase "$ACM_KEY_PASSWORD" \
+--private-key-alias "private-key" \
+--truststore-aliases "ca1, ca2" \
+--truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem >> /var/log/acm-cert-retriever.log 2>&1
+```
+
+The `private-key-alias` can be any string unique to your deployment.
