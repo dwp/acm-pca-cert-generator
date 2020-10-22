@@ -153,3 +153,39 @@ acm-pca-cert-generator \
 --truststore-aliases ca1,ca2 \
 --truststore-certs s3://certbucket/certs/ca_1.pem,s3://certbucket/certs/ca_2.pem
 ```
+
+In this example, we are generating a certificate in Terraform, and then retrieving the certificate only:
+
+Terraform:
+```
+resource "aws_acm_certificate" "tarball_ingestion" {
+     certificate_authority_arn = data.terraform_remote_state.certificate_authority.outputs.root_ca.arn
+     domain_name               = "${local.tarball_ingestion_name}.${local.env_prefix[local.environment]}dataworks.dwp.gov.uk"
+   
+     options {
+       certificate_transparency_logging_preference = "DISABLED"
+     }
+   
+     tags = merge(
+       local.common_tags,
+       {
+         Name = "tarball-ingester-cert"
+       },
+     )
+   }
+```
+
+ACM call:
+
+```
+ACM_KEY_PASSWORD=$(uuidgen -r)
+
+acm-cert-retriever \
+--acm-cert-arn "${acm_cert_arn}" \
+--acm-key-passphrase "$ACM_KEY_PASSWORD" \
+--private-key-alias "${private_key_alias}" \
+--truststore-aliases "${truststore_aliases}" \
+--truststore-certs "${truststore_certs}" >> /var/log/acm-cert-retriever.log 2>&1
+```
+
+The `private-key-alias` can be any string unique to your deployment.
