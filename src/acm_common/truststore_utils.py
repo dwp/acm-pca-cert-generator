@@ -282,7 +282,6 @@ def add_ca_certs(s3_client, certs):
         else:
             raise
 
-
     for cert_entry in certs:
         alias = cert_entry["alias"]
         entry = cert_entry["cert"]
