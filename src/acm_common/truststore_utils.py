@@ -6,6 +6,7 @@ import OpenSSL
 import jks
 import logging
 import os
+import errno
 
 try:
     from urllib.parse import urlparse
@@ -260,6 +261,28 @@ def add_ca_certs(s3_client, certs):
     """
     logger.info("Fetching CA certs and writing to filesystem")
 
+    # Determine which update-ca command to use and directory to store CAs in
+    try:
+        os.system("update-ca-trust")
+        update_ca_cmd = "update-ca-trust"
+        ca_dir = "/etc/pki/ca-trust/source/anchors/"
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            logger.debug("update-ca-trust unavailable")
+            try:
+                os.system("update-ca-certificates")
+                update_ca_cmd = "update-ca-certificates"
+                ca_dir = "/usr/local/share/ca-certificates/"
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    logger.debug("update-ca-certificates unavailable")
+                    raise
+                else:
+                    raise
+        else:
+            raise
+
+
     for cert_entry in certs:
         alias = cert_entry["alias"]
         entry = cert_entry["cert"]
@@ -269,8 +292,8 @@ def add_ca_certs(s3_client, certs):
         pem_cert_body = fetch_cert(source, entry, s3_client)
         logger.debug("...cert body = {}".format(pem_cert_body))
 
-        with open("/etc/pki/ca-trust/source/anchors/" + alias + ".crt", "a") as f:
+        with open(ca_dir + alias + ".crt", "a") as f:
             f.write(str(pem_cert_body))
 
     logger.info("Updating CA trust")
-    os.system("update-ca-trust")
+    os.system(update_ca_cmd)
