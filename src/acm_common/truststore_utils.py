@@ -149,11 +149,25 @@ def add_cert_and_key(priv_key, cert_list, alias):
     """
     logger.info("Writing certificate and private key to filesystem")
 
-    with open("/etc/pki/tls/private/" + alias + ".key", "a") as f:
+    # Determine which directory to store certs in
+    if command_exists("update-ca-trust"):
+        ca_dir = "/etc/pki"
+    elif command_exists("update-ca-certificates"):
+        ca_dir = "/etc/ssl"
+    else:
+        logger.error("Cannot determine certs directory")
+        raise OSError(
+            "OS is missing a required command for CA trust. Either update-ca-trust or "
+            "update-ca-certificates is required."
+        )
+
+    logger.info("Using cert directory:" + ca_dir)
+
+    with open(ca_dir + "/private/" + alias + ".key", "a") as f:
         f.write(str(priv_key))
 
     for cert in cert_list:
-        with open("/etc/pki/tls/certs/" + alias + ".crt", "a") as f:
+        with open(ca_dir + "/certs/" + alias + ".crt", "a") as f:
             f.write(cert)
 
 
