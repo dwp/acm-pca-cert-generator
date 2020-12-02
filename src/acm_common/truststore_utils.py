@@ -18,6 +18,14 @@ logger = logging.getLogger("truststore")
 certificate_suffix = "-----END CERTIFICATE-----"
 
 
+def command_exists(name):
+    """Check whether `name` is on PATH and marked as executable."""
+
+    from shutil import which
+
+    return which(name) is not None
+
+
 def get_aws_certificate_chain(all_aws_data):
     """Make a certificate chain in order.
 
@@ -262,25 +270,18 @@ def add_ca_certs(s3_client, certs):
     logger.info("Fetching CA certs and writing to filesystem")
 
     # Determine which update-ca command to use and directory to store CAs in
-    try:
-        os.system("update-ca-trust")
+    if command_exists("update-ca-trust"):
+        logger.info("update-ca-trust available")
         update_ca_cmd = "update-ca-trust"
         ca_dir = "/etc/pki/ca-trust/source/anchors/"
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            logger.debug("update-ca-trust unavailable")
-            try:
-                os.system("update-ca-certificates")
-                update_ca_cmd = "update-ca-certificates"
-                ca_dir = "/usr/local/share/ca-certificates/"
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    logger.debug("update-ca-certificates unavailable")
-                    raise
-                else:
-                    raise
-        else:
-            raise
+    elif command_exists("update-ca-certificates"):
+        logger.info("update-ca-certificates available")
+        update_ca_cmd = "update-ca-certificates"
+        ca_dir = "/usr/local/share/ca-certificates/"
+    else:
+        logger.error("Environment is missing required CA commands")
+        raise OSError("OS is missing a required command for CA trust. Either update-ca-trust or "
+                      "update-ca-certificates is required.")
 
     for cert_entry in certs:
         alias = cert_entry["alias"]
