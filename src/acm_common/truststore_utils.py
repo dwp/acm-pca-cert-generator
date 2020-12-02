@@ -280,8 +280,10 @@ def add_ca_certs(s3_client, certs):
         ca_dir = "/usr/local/share/ca-certificates/"
     else:
         logger.error("Environment is missing required CA commands")
-        raise OSError("OS is missing a required command for CA trust. Either update-ca-trust or "
-                      "update-ca-certificates is required.")
+        raise OSError(
+            "OS is missing a required command for CA trust. Either update-ca-trust or "
+            "update-ca-certificates is required."
+        )
 
     for cert_entry in certs:
         alias = cert_entry["alias"]
