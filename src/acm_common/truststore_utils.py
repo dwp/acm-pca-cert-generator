@@ -6,7 +6,6 @@ import OpenSSL
 import jks
 import logging
 import os
-import errno
 
 try:
     from urllib.parse import urlparse
@@ -19,8 +18,11 @@ certificate_suffix = "-----END CERTIFICATE-----"
 
 
 def command_exists(name):
-    """Check whether `name` is on PATH and marked as executable."""
+    """Check whether `name` is on PATH and marked as executable.
 
+    Args:
+        name (str): Command to check if exists
+    """
     from shutil import which
 
     return which(name) is not None
