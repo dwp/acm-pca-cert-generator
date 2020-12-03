@@ -163,6 +163,10 @@ def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
     decrypted_key = encrypted_key.export_key()
     all_data["PrivateKey"] = decrypted_key
 
+    # Python3 will return a byte string, Python2 will return a string
+    if type(decrypted_key) == bytes:
+        all_data["PrivateKey"] = decrypted_key.decode("utf-8")
+
     logger.info("Retrieved cert and key from AWS and decrypted the key")
     return all_data
 
