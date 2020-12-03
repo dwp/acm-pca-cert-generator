@@ -219,6 +219,10 @@ def fetch_cert(source, entry, s3_client):
             "Invalid cert entry type {}, " "must be one of s3, memory".format(source)
         )
 
+    # Python3 will return a byte string, Python2 will return a string
+    if type(pem_cert_body) == bytes:
+        pem_cert_body = pem_cert_body.decode("utf-8")
+
     return pem_cert_body
 
 
