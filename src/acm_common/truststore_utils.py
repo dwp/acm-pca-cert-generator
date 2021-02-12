@@ -6,6 +6,7 @@ import OpenSSL
 import jks
 import logging
 import os
+import sys
 
 try:
     from urllib.parse import urlparse
@@ -17,15 +18,34 @@ logger = logging.getLogger("truststore")
 certificate_suffix = "-----END CERTIFICATE-----"
 
 
-def command_exists(name):
+def command_exists(name, path=None):
     """Check whether `name` is on PATH and marked as executable.
 
     Args:
         name (str): Command to check if exists
     """
-    from shutil import which
+    if path is None:
+        path = sys.path
 
-    return which(name) is not None
+    for prefix in path:
+        filename = os.path.join(prefix, name)
+        is_executable = os.access(filename, os.X_OK)
+        is_file = os.path.isfile(filename)
+        if is_executable and is_file:
+            return True
+    
+    return False
+
+
+# def command_exists(name):
+#     """Check whether `name` is on PATH and marked as executable.
+
+#     Args:
+#         name (str): Command to check if exists
+#     """
+#     from shutil import which
+
+#     return which(name) is not None
 
 
 def get_aws_certificate_chain(all_aws_data):

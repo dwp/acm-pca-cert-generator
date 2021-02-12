@@ -1,5 +1,6 @@
 import OpenSSL
 import botocore.session
+import os
 import io
 import jks
 import logging
@@ -89,6 +90,37 @@ def test_parse_trusted_cert_arg():
     assert certs[0]["cert"] == "s3://certbucket/ca1.pem"
     assert certs[1]["alias"] == "myca2"
     assert certs[1]["cert"] == "s3://certbucket/ca2.pem"
+
+
+def test_command_exists_finds_path_that_exists():
+    assert truststore_utils.command_exists("pytest") is True
+
+
+def test_command_exists_does_not_find_path_that_does_not_exist():
+    assert truststore_utils.command_exists("definitely_not_likely_to_be_a_command") is False
+
+
+def test_command_exists_does_not_finds_path_that_is_not_executable():
+    test_path = "/tmp"
+    test_file = "test.txt"
+    test_file_and_path = os.path.join(test_path, test_file)
+    if os.path.exists(test_file_and_path):
+        os.remove(test_file_and_path)
+
+    with open(test_file_and_path, "a") as test_file_write:
+        test_file_write.write("Test file contents")
+    
+    assert truststore_utils.command_exists(test_file, [test_path]) is False
+
+
+def test_command_exists_does_not_finds_path_that_is_directory():
+    test_path = "/tmp"
+    test_directory = "dir"
+    test_path_and_directory = os.path.join(test_path, test_directory)
+    if not os.path.exists(test_path_and_directory):
+        os.mkdir(test_path_and_directory)
+    
+    assert truststore_utils.command_exists(test_directory, [test_path]) is False
 
 
 def test_parse_trusted_cert_arg_mismatched_lengths():
