@@ -77,6 +77,7 @@ jobs:
           # Snyk is supposed to do this automatically but it doesn't, so we manually install dependencies to be tested
           name: Install dependencies
           command: |
+            sudo pip install --upgrade pip
             sudo pip install -r requirements.txt
       - snyk/scan:
           organization: dwp-dataworks
@@ -93,6 +94,7 @@ jobs:
           # Snyk is supposed to do this automatically but it doesn't, so we manually install dependencies to be tested
           name: Install dependencies
           command: |
+            sudo pip install --upgrade pip
             sudo pip install -r requirements.txt
       - snyk/scan:
           organization: dwp-dataworks
