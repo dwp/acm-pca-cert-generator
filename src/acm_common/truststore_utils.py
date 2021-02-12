@@ -23,6 +23,7 @@ def command_exists(name, path=None):
 
     Args:
         name (str): Command to check if exists
+        path (list): List of the paths to check, uses $PATH variable if not passed in
     """
     if path is None:
         path = sys.path
@@ -35,17 +36,6 @@ def command_exists(name, path=None):
             return True
 
     return False
-
-
-# def command_exists(name):
-#     """Check whether `name` is on PATH and marked as executable.
-
-#     Args:
-#         name (str): Command to check if exists
-#     """
-#     from shutil import which
-
-#     return which(name) is not None
 
 
 def get_aws_certificate_chain(all_aws_data):
