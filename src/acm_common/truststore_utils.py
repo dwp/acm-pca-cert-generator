@@ -33,7 +33,7 @@ def command_exists(name, path=None):
         is_file = os.path.isfile(filename)
         if is_executable and is_file:
             return True
-    
+
     return False
 
 

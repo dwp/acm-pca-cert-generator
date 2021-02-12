@@ -97,7 +97,10 @@ def test_command_exists_finds_path_that_exists():
 
 
 def test_command_exists_does_not_find_path_that_does_not_exist():
-    assert truststore_utils.command_exists("definitely_not_likely_to_be_a_command") is False
+    assert (
+        truststore_utils.command_exists("definitely_not_likely_to_be_a_command")
+        is False
+    )
 
 
 def test_command_exists_does_not_finds_path_that_is_not_executable():
@@ -109,7 +112,7 @@ def test_command_exists_does_not_finds_path_that_is_not_executable():
 
     with open(test_file_and_path, "a") as test_file_write:
         test_file_write.write("Test file contents")
-    
+
     assert truststore_utils.command_exists(test_file, [test_path]) is False
 
 
@@ -119,7 +122,7 @@ def test_command_exists_does_not_finds_path_that_is_directory():
     test_path_and_directory = os.path.join(test_path, test_directory)
     if not os.path.exists(test_path_and_directory):
         os.mkdir(test_path_and_directory)
-    
+
     assert truststore_utils.command_exists(test_directory, [test_path]) is False
 
 
