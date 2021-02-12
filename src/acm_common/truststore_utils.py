@@ -161,7 +161,7 @@ def add_cert_and_key(priv_key, cert_list, alias):
 
     # Determine which directory to store certs in
     if command_exists("update-ca-trust"):
-        ca_dir = "/etc/pki"
+        ca_dir = "/etc/pki/tls"
     elif command_exists("update-ca-certificates"):
         ca_dir = "/etc/ssl"
     else:
