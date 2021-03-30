@@ -228,6 +228,11 @@ def test_retrieve_key_and_cert_retryable_will_retry():
         calls
     )
 
+    # Cleanup
+    del os.environ['RETRYABLE_EXPORT_MAX_ATTEMPTS']
+    del os.environ['RETRYABLE_EXPORT_BACKOFF_MILLIS']
+    del os.environ['RETRYABLE_EXPORT_MAX_BACKOFF_MILLIS']
+
 
 def _generate_self_signed_cert(private_key):
     # Generate CSR
