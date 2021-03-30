@@ -8,6 +8,8 @@ import logging
 import os
 import sys
 
+from retrying import retry
+
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -16,6 +18,10 @@ except ImportError:
 
 logger = logging.getLogger("truststore")
 certificate_suffix = "-----END CERTIFICATE-----"
+
+retry_count = int(os.getenv('RETRYABLE_EXPORT_MAX_ATTEMPTS', "30"))
+retry_backoff_millis = int(os.getenv('RETRYABLE_EXPORT_BACKOFF_MILLIS', "1000"))
+retry_max_backoff_millis = int(os.getenv('RETRYABLE_EXPORT_MAX_BACKOFF_MILLIS', "20000"))
 
 
 def command_exists(name, path=None):
@@ -329,3 +335,22 @@ def add_ca_certs(s3_client, certs):
 
     logger.info("Updating CA trust")
     os.system(update_ca_cmd)
+
+
+@retry(stop_max_attempt_number=retry_count,wait_exponential_multiplier=retry_backoff_millis, wait_exponential_max=retry_max_backoff_millis)
+def retrieve_key_and_cert_retryable(acm_util, acm_cert_arn, acm_key_passphrase):
+    """Retrieves the cert using retries.
+
+    Args:
+        acm_util (Object): The boto3 utility to use
+        acm_cert_arn (String): ARN of the certificate to export
+        acm_key_passphrase (String): temporary password to use for key encryption
+
+    Raises:
+        Error: If the export request fails after retries
+    
+    """
+    logger.info("Attempting to retrieve cert and key from AWS...")
+    return acm_util.export_certificate(
+        CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase
+    )
