@@ -49,10 +49,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch("acm_common.truststore_utils.parse_trusted_cert_arg")
     @mock.patch("acm_common.truststore_utils.generate_keystore")
     @mock.patch("acm_common.truststore_utils.generate_truststore")
+    @mock.patch("acm_common.truststore_utils.retrieve_key_and_cert_retryable")
     @mock.patch("acm_cert_retriever.retriever.logger")
     def test_retrieve_key_and_cert_will_log_and_throw_exception_when_arn_is_bad(
         self,
         mocked_logger,
+        mocked_retrieve_key_and_cert_retryable,
         mocked_generate_truststore,
         mocked_generate_keystore,
         mocked_parse_trusted_cert_arg,
@@ -73,8 +75,7 @@ class TestRetriever(unittest.TestCase):
         bad_args = make_tuple(bad_sample_args)
 
         acm_client = MagicMock()
-        acm_client.export_certificate = MagicMock()
-        acm_client.export_certificate.side_effect = Exception("Bad ARN!")
+        mocked_retrieve_key_and_cert_retryable.side_effect = Exception("Bad ARN!")
 
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
@@ -95,8 +96,8 @@ class TestRetriever(unittest.TestCase):
         mocked_logger.exception.assert_called_with(
             "Failed to fetch bad-arn: Error = Bad ARN!"
         )
-        acm_client.export_certificate.assert_called_once_with(
-            CertificateArn="bad-arn", Passphrase="my-key-passphrase"
+        mocked_retrieve_key_and_cert_retryable.assert_called_once_with(
+            acm_client, "bad-arn", "my-key-passphrase"
         )
 
         rsa_util.import_key.assert_not_called()
@@ -104,13 +105,17 @@ class TestRetriever(unittest.TestCase):
         mocked_parse_trusted_cert_arg.assert_not_called()
         mocked_generate_truststore.assert_not_called()
 
+
+class TestRetriever(unittest.TestCase):
     @mock.patch("acm_common.truststore_utils.parse_trusted_cert_arg")
     @mock.patch("acm_common.truststore_utils.generate_keystore")
     @mock.patch("acm_common.truststore_utils.generate_truststore")
+    @mock.patch("acm_common.truststore_utils.retrieve_key_and_cert_retryable")
     @mock.patch("acm_common.truststore_utils.get_aws_certificate_chain")
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_with_cert_chain(
         self,
         mocked_get_aws_certificate_chain,
+        mocked_retrieve_key_and_cert_retryable,
         mocked_generate_truststore,
         mocked_generate_keystore,
         mocked_parse_trusted_cert_arg,
@@ -120,9 +125,8 @@ class TestRetriever(unittest.TestCase):
         dummy_args = make_tuple(copy.deepcopy(template_args))
 
         acm_client = MagicMock()
-        acm_client.export_certificate = MagicMock()
         aws_downloaded_data = copy.deepcopy(template_downloaded_data)
-        acm_client.export_certificate.return_value = aws_downloaded_data
+        mocked_retrieve_key_and_cert_retryable.return_value = aws_downloaded_data
 
         rsa_util = MagicMock()
         rsa_util.import_key = MagicMock()
@@ -149,8 +153,8 @@ class TestRetriever(unittest.TestCase):
         )
 
         # Then
-        acm_client.export_certificate.assert_called_once_with(
-            CertificateArn="my-cert-arn", Passphrase="my-key-passphrase"
+        mocked_retrieve_key_and_cert_retryable.assert_called_once_with(
+            acm_client, "my-cert-arn", "my-key-passphrase"
         )
 
         rsa_util.import_key.assert_called_once_with(
@@ -179,10 +183,12 @@ class TestRetriever(unittest.TestCase):
     @mock.patch("acm_common.truststore_utils.parse_trusted_cert_arg")
     @mock.patch("acm_common.truststore_utils.generate_keystore")
     @mock.patch("acm_common.truststore_utils.generate_truststore")
+    @mock.patch("acm_common.truststore_utils.retrieve_key_and_cert_retryable")
     @mock.patch("acm_common.truststore_utils.get_aws_certificate_chain")
     def test_retrieve_key_and_cert_will_make_stores_from_acm_data_without_cert_chain(
         self,
         mocked_get_aws_certificate_chain,
+        mocked_retrieve_key_and_cert_retryable,
         mocked_generate_truststore,
         mocked_generate_keystore,
         mocked_parse_trusted_cert_arg,
@@ -194,10 +200,9 @@ class TestRetriever(unittest.TestCase):
         no_download_args = make_tuple(no_download)
 
         acm_client = MagicMock()
-        acm_client.export_certificate = MagicMock()
         truststore_utils.add_cert_and_key = MagicMock()
         truststore_utils.add_ca_certs = MagicMock()
-        acm_client.export_certificate.return_value = copy.deepcopy(
+        mocked_retrieve_key_and_cert_retryable.return_value = copy.deepcopy(
             template_downloaded_data
         )
 
@@ -218,8 +223,8 @@ class TestRetriever(unittest.TestCase):
         )
 
         # Then
-        acm_client.export_certificate.assert_called_once_with(
-            CertificateArn="my-cert-arn", Passphrase="my-key-passphrase"
+        mocked_retrieve_key_and_cert_retryable.assert_called_once_with(
+            acm_client, "my-cert-arn", "my-key-passphrase"
         )
 
         rsa_util.import_key.assert_called_once_with(

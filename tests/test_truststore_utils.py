@@ -9,6 +9,15 @@ from acm_pca_cert_generator import certgen
 from acm_common import truststore_utils
 from botocore.stub import Stubber, ANY
 
+try:
+    import mock
+    from mock import MagicMock
+    from mock import call
+except ImportError:
+    from unittest import mock
+    from unittest.mock import MagicMock
+    from unittest.mock import call
+
 
 valid_subject_details = {
     "C": "GB",
@@ -177,6 +186,56 @@ def test_generate_truststore():
         )
         ts = jks.KeyStore.load(truststore_path, truststore_password)
         assert len(ts.certs) == 2
+
+
+def test_retrieve_key_and_cert_retryable_will_call_cert_utils():
+    # Given
+    acm_client = MagicMock()
+    acm_client.export_certificate = MagicMock()
+    acm_client.export_certificate.return_value = "data-downloaded"
+
+    # When
+    truststore_utils.retrieve_key_and_cert_retryable(
+        acm_client, "test-arn", "test-passphrase"
+    )
+
+    # Then
+    acm_client.export_certificate.assert_called_once_with(
+        CertificateArn="test-arn", Passphrase="test-passphrase"
+    )
+
+
+def test_retrieve_key_and_cert_retryable_will_retry():
+    # Given
+    os.environ["RETRYABLE_EXPORT_MAX_ATTEMPTS"] = "3"
+    os.environ["RETRYABLE_EXPORT_BACKOFF_MILLIS"] = "1"
+    os.environ["RETRYABLE_EXPORT_MAX_BACKOFF_MILLIS"] = "10"
+
+    acm_client = MagicMock()
+    acm_client.export_certificate = MagicMock()
+    acm_client.export_certificate.side_effect = [
+        Exception("Bad1"),
+        Exception("Bad2"),
+        "success",
+    ]
+
+    # When
+    truststore_utils.retrieve_key_and_cert_retryable(
+        acm_client, "test-arn", "test-passphrase"
+    )
+
+    # Then
+    calls = [
+        call(CertificateArn="test-arn", Passphrase="test-passphrase"),
+        call(CertificateArn="test-arn", Passphrase="test-passphrase"),
+        call(CertificateArn="test-arn", Passphrase="test-passphrase"),
+    ]
+    acm_client.export_certificate.assert_has_calls(calls)
+
+    # Cleanup
+    del os.environ["RETRYABLE_EXPORT_MAX_ATTEMPTS"]
+    del os.environ["RETRYABLE_EXPORT_BACKOFF_MILLIS"]
+    del os.environ["RETRYABLE_EXPORT_MAX_BACKOFF_MILLIS"]
 
 
 def _generate_self_signed_cert(private_key):

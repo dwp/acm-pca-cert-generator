@@ -150,8 +150,8 @@ def retrieve_key_and_cert(acm_util, rsa_util, acm_cert_arn, acm_key_passphrase):
     """
     logger.info("Retrieving cert and key from AWS...")
     try:
-        all_data = acm_util.export_certificate(
-            CertificateArn=acm_cert_arn, Passphrase=acm_key_passphrase
+        all_data = truststore_utils.retrieve_key_and_cert_retryable(
+            acm_util, acm_cert_arn, acm_key_passphrase
         )
     except Exception as e:
         logger.exception("Failed to fetch {}: Error = {}".format(acm_cert_arn, e))
