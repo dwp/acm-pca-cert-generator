@@ -23,7 +23,7 @@ setuptools.setup(
     },
     package_dir={"": "src"},
     packages=setuptools.find_packages("src"),
-    install_requires=["ConfigArgParse", "boto3", "pyjks", "pyopenssl", "pycryptodome"],
+    install_requires=["ConfigArgParse", "boto3", "pyjks", "pyopenssl", "pycryptodome", "retrying"],
     classifiers=[
         "Programming Language :: Python :: 2",
         "License :: OSI Approved :: MIT License",
