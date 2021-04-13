@@ -17,7 +17,8 @@ RUN apk add --no-cache \
 # Container Dependencies
 RUN apk add --update --no-cache \
     curl \
-    aws-cli
+    aws-cli \
+    gcc
 
 # Download acm-cert-helper
 RUN curl -k -LSs --output /tmp/acm_cert_helper.tar.gz \
