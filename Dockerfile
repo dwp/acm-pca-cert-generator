@@ -10,9 +10,8 @@ RUN apk add --update --no-cache \
 # Download acm-cert-helper
 RUN curl -k -LSs --output /tmp/acm_cert_helper.tar.gz \
     https://github.com/dwp/acm-pca-cert-generator/releases/download/${ACM_CERT_HELPER_VERSION}/acm_cert_helper-${ACM_CERT_HELPER_VERSION}.tar.gz && \
-    tar -C /tmp --strip-components=1 -zoxf /tmp/acm_cert_helper.tar.gz && \
-    rm -f /tmp/acm_cert_helper.tar.gz && \
-    pip3 install /tmp/acm_cert_helper-${ACM_CERT_HELPER_VERSION}.tar.gz
+    pip3 install /tmp/acm_cert_helper-${ACM_CERT_HELPER_VERSION}.tar.gz && \
+    rm -f /tmp/acm_cert_helper.tar.gz
 
 COPY entrypoint.sh /bin/entrypoint.sh
 
