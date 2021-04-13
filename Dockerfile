@@ -14,7 +14,7 @@ RUN curl -k -LSs --output /tmp/acm_cert_helper.tar.gz \
     https://github.com/dwp/acm-pca-cert-generator/releases/download/${ACM_CERT_HELPER_VERSION}/acm_cert_helper-${ACM_CERT_HELPER_VERSION}.tar.gz && \
     tar -C /tmp --strip-components=1 -zoxf /tmp/acm_cert_helper.tar.gz && \
     rm -f /tmp/acm_cert_helper.tar.gz && \
-    mv /tmp/acm_cert_helper /bin/ && \
+    mv /tmp/acm-cert-retriever /bin/ && \
     mkdir -p /acm-cert-helper && \
     chmod 0755 /bin/entrypoint.sh && \
     chown -R nobody:nogroup /etc/acm_cert_helper /acm_cert_helper
