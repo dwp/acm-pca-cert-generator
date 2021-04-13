@@ -1,4 +1,4 @@
-FROM alpine:3-alpine3.13
+FROM python:3-alpine3.13
 
 ARG ACM_CERT_HELPER_VERSION=0.41.0
 
