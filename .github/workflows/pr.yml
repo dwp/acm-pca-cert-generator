@@ -59,6 +59,26 @@ jobs:
           AWS_DEFAULT_REGION: eu-west-2
           envlist: py27
 
+  test37:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install Tox
+        run: pip install tox
+
+      - name: unit-tests
+        run: make unittest
+        env:
+          AWS_DEFAULT_REGION: eu-west-2
+          envlist: py37
+  
   test38:
     runs-on: ubuntu-latest
     steps:
@@ -78,3 +98,23 @@ jobs:
         env:
           AWS_DEFAULT_REGION: eu-west-2
           envlist: py38
+
+  test39:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: Install Tox
+        run: pip install tox
+
+      - name: unit-tests
+        run: make unittest
+        env:
+          AWS_DEFAULT_REGION: eu-west-2
+          envlist: py39
