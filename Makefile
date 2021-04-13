@@ -22,3 +22,6 @@ git-hooks: ## Set up hooks in .git/hooks
 			ln -s -f ../../.githooks/$${hook} $${HOOK_DIR}/$${hook}; \
 		done \
 	}
+
+unittest:
+	tox

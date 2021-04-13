@@ -1,0 +1,25 @@
+name: Image-PR
+
+on:
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - "entrypoint.sh"
+
+env:
+  IMAGE_NAME: dwpdigital/acm-cert-helper
+
+jobs:
+  docker-build-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Docker image
+        run: docker build -t ${{ env.IMAGE_NAME }}:latest .
+      - name: Run Snyk to check image for high vulnerabilities
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          args: --file=Dockerfile --policy-path=./.snyk --severity-threshold=high --exclude-base-image-vulns --org=dwp-dataworks

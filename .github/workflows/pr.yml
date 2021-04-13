@@ -3,8 +3,10 @@ name: Perform Python Format
 on:
   pull_request:
     paths-ignore:
-      - '.circleci/**'
-      - '.github/workflows/**'
+      - ".circleci/**"
+      - ".github/workflows/**"
+      - "ci/**"
+      - "Dockerfile"
 
 jobs:
   build:
@@ -13,10 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
 
-      - name: Set up Python 3.7
+      - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Install Black
         run: pip install black
@@ -36,3 +38,83 @@ jobs:
           git checkout $GITHUB_HEAD_REF
           git commit -am "Fixup: Format Python code with Black"
           git push
+
+  test27:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Python 2.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 2.7
+
+      - name: Install Tox
+        run: pip install tox
+
+      - name: unit-tests
+        run: make unittest
+        env:
+          AWS_DEFAULT_REGION: eu-west-2
+          envlist: py27
+
+  test37:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install Tox
+        run: pip install tox
+
+      - name: unit-tests
+        run: make unittest
+        env:
+          AWS_DEFAULT_REGION: eu-west-2
+          envlist: py37
+  
+  test38:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install Tox
+        run: pip install tox
+
+      - name: unit-tests
+        run: make unittest
+        env:
+          AWS_DEFAULT_REGION: eu-west-2
+          envlist: py38
+
+  test39:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: Install Tox
+        run: pip install tox
+
+      - name: unit-tests
+        run: make unittest
+        env:
+          AWS_DEFAULT_REGION: eu-west-2
+          envlist: py39
