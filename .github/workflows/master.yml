@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@master
 
       - name: Generate artifacts directory
-        run: mkdir artifacts
+        run: mkdir artefacts
 
       - name: Set up Python 3.7
         uses: actions/setup-python@v1
@@ -63,12 +63,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt -t artifacts
-          cp -r src/ artifacts
-
-      - name: Produce artefact
-        working-directory: ./artifacts
-        run: tar -cf ../acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz *
+          sed -i -e "s/version=\"0.0.0\"/version=\"${{ needs.get-publish-version.outputs.publish-version }}\"/" setup.py
+          python setup.py sdist --dist-dir artefacts
 
       - name: Create GitHub Release
         id: create_release
@@ -84,6 +80,7 @@ jobs:
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
+        working-directory: ./artefacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
