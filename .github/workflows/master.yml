@@ -80,11 +80,10 @@ jobs:
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
-        working-directory: ./artefacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
-          asset_name: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
+          asset_path: artefacts/acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
+          asset_name: artefacts/acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
           asset_content_type: application/x-tar
