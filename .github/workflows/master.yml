@@ -54,10 +54,10 @@ jobs:
       - name: Generate artifacts directory
         run: mkdir artifacts
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.7
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.7
 
       - name: Install dependencies
         run: |
