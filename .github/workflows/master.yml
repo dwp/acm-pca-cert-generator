@@ -66,9 +66,9 @@ jobs:
           pip install -r requirements.txt -t artifacts
           cp -r src/ artifacts
 
-      - name: Produce zip
+      - name: Produce artefact
         working-directory: ./artifacts
-        run: zip -qq -r ../acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.zip *
+        run: tar -cf ../acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz *
 
       - name: Create GitHub Release
         id: create_release
