@@ -57,7 +57,7 @@ jobs:
         run: make unittest
         env:
           AWS_DEFAULT_REGION: eu-west-2
-          toxenv: py27
+          envlist: py27
 
   test38:
     runs-on: ubuntu-latest
@@ -77,4 +77,4 @@ jobs:
         run: make unittest
         env:
           AWS_DEFAULT_REGION: eu-west-2
-          toxenv: py38
+          envlist: py38
