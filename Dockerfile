@@ -1,6 +1,6 @@
 FROM python:3-alpine3.13
 
-ARG ACM_CERT_HELPER_VERSION=0.41.0
+ARG ACM_CERT_HELPER_VERSION=0.41.3
 
 # Upgrade pip
 
