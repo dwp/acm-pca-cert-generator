@@ -44,3 +44,5 @@ jobs:
 
       - name: unit-tests
         run: make unittest
+        env:
+          AWS_DEFAULT_REGION: eu-west-2
