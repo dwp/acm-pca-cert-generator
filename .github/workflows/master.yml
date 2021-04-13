@@ -1,0 +1,73 @@
+name: Master
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "Dockerfile"
+      - "entrypoint.sh"
+
+env:
+  IMAGE_NAME: dwpdigital/acm-cert-helper
+
+jobs:
+  get-publish-version:
+    runs-on: ubuntu-latest
+    outputs:
+      publish-version: ${{ steps.get-publish-version.outputs.publish-version }}
+    steps:
+      - name: Prepare SemVer
+        id: prepare-semver
+        run: |
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+          echo ::set-output name=latest_version_out::$LATEST_VERSION
+          commit_message="${{ github.event.head_commit.message }}"
+          if [[ "${commit_message,,}" == *"major release"* ]]; then
+            echo ::set-output name=semver_increment::"m"
+          elif [[ "${commit_message,,}" == *"minor release"* ]]; then
+            echo ::set-output name=semver_increment::"i"
+          else
+            echo ::set-output name=semver_increment::"p"
+          fi
+      - name: Increment SemVer
+        id: semver
+        uses: matt-FFFFFF/simple-semver@v0.1.0
+        with:
+          semver-input: ${{ steps.prepare-semver.outputs.latest_version_out }}
+          increment: ${{ steps.prepare-semver.outputs.semver_increment }}
+      - name: Get publish version
+        id: get-publish-version
+        run: echo "::set-output name=publish-version::${{ steps.semver.outputs.semver }}"
+
+  publish-docker:
+    runs-on: ubuntu-latest
+    needs: get-publish-version
+    steps:
+      - uses: actions/checkout@master
+      - name: Get release version
+        id: get_version
+        run: echo RELEASE_VERSION=$(echo ${GITHUB_REF:10}) >> $GITHUB_ENV
+      - name: Publish to DockerHub
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          tags: "latest, ${{ needs.get-publish-version.outputs.publish-version }}"
+          tag_semver: true
+
+  snyk-monitor:
+    runs-on: ubuntu-latest
+    needs: publish-docker
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Snyk monitoring
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          image: ${{ env.IMAGE_NAME }}
+          args: --file=Dockerfile --policy-path=./.snyk --org=dwp-dataworks
