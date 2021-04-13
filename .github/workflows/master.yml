@@ -10,7 +10,8 @@ on:
       - ".circleci/**"
       - ".github/workflows/**"
       - "ci/**"
-
+  workflow_dispatch:
+    
 env:
   IMAGE_NAME: dwpdigital/acm-cert-helper
 
