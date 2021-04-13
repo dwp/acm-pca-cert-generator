@@ -7,10 +7,13 @@ on:
       - ".github/workflows/**"
 
 jobs:
+
   validate:
     name: "Validate workflows"
     runs-on: ubuntu-latest
     steps:
+      - name: "Setup environemnt"
+        run: echo "-P catthehacker/ubuntu:act-18.04" >> .actrc
       - name: "arc install"
         id: arc
         run: curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
@@ -18,4 +21,3 @@ jobs:
       - name: "arc dry-run"
         id: dry-run
         run: act -n
-        
