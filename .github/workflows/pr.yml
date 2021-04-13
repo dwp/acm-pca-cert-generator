@@ -121,7 +121,6 @@ jobs:
   
   snyk-monitor:
     runs-on: ubuntu-latest
-    needs: publish-github-release
     steps:
       - uses: actions/checkout@v2
       - name: Run Snyk monitoring
