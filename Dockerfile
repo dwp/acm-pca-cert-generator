@@ -6,7 +6,8 @@ ARG ACM_CERT_HELPER_VERSION=0.41.0
 RUN apk add --update --no-cache \
     curl \
     aws-cli \
-    gcc
+    gcc \
+    musl-dev
 
 # Download acm-cert-helper
 RUN curl -k -LSs --output /tmp/acm_cert_helper.tar.gz \

@@ -38,3 +38,6 @@ jobs:
           git checkout $GITHUB_HEAD_REF
           git commit -am "Fixup: Format Python code with Black"
           git push
+
+      - name: unit-tests
+        run: make unittest
