@@ -62,7 +62,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt -t artifacts
-          cp src/ artifacts
+          cp -r src/ artifacts
 
       - name: Produce zip
         working-directory: ./artifacts
