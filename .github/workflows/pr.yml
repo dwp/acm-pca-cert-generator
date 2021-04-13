@@ -118,3 +118,13 @@ jobs:
         env:
           AWS_DEFAULT_REGION: eu-west-2
           envlist: py39
+  
+  snyk-monitor:
+    runs-on: ubuntu-latest
+    needs: publish-github-release
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Snyk monitoring
+        uses: snyk/actions/python-3.8@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

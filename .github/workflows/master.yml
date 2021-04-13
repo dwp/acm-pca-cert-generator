@@ -91,13 +91,3 @@ jobs:
           asset_path: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.zip
           asset_name: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.zip
           asset_content_type: application/zip
-
-  snyk-monitor:
-    runs-on: ubuntu-latest
-    needs: publish-github-release
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run Snyk monitoring
-        uses: snyk/actions/python-3.8@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
