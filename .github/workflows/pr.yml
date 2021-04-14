@@ -7,6 +7,9 @@ on:
       - ".github/workflows/**"
       - "ci/**"
 
+env:
+  IMAGE_NAME: dwpdigital/acm-cert-helper
+
 jobs:
   build:
     runs-on: ubuntu-latest
