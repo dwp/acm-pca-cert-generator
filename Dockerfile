@@ -28,12 +28,6 @@ RUN curl -k -LSs --output /tmp/acm_cert_helper.tar.gz \
     pip3 install /tmp/acm_cert_helper.tar.gz && \
     rm -f /tmp/acm_cert_helper.tar.gz
 
-RUN apk del \
-    libressl-dev \
-    musl-dev \
-    gcc \
-    libffi-dev
-
 COPY entrypoint.sh /bin/entrypoint.sh
 
 RUN mkdir -p /acm-cert-helper && \
