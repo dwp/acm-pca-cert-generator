@@ -5,8 +5,6 @@ on:
     branches:
       - master
     paths-ignore:
-      - "Dockerfile"
-      - "entrypoint.sh"
       - ".circleci/**"
       - ".github/workflows/**"
       - "ci/**"
