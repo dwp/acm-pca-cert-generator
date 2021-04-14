@@ -62,6 +62,8 @@ jobs:
         run: |
           sed -i -e "s/version=\"0.0.0\"/version=\"${{ needs.get-publish-version.outputs.publish-version }}\"/" setup.py
           python setup.py sdist --dist-dir .
+          $LATEST_VERSION=$(ls | grep acm_*)
+          echo "Successfully generated $LATEST_VERSION"
 
       - name: Create GitHub Release
         id: create_release
@@ -81,7 +83,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
-          asset_name: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
+          asset_path: acm_cert_helper-${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
+          asset_name: acm_cert_helper-${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
           asset_content_type: application/x-tar
           
