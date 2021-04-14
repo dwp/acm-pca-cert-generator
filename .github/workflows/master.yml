@@ -62,7 +62,7 @@ jobs:
         run: |
           sed -i -e "s/version=\"0.0.0\"/version=\"${{ needs.get-publish-version.outputs.publish-version }}\"/" setup.py
           python setup.py sdist --dist-dir .
-          $LATEST_VERSION=$(ls | grep acm_*)
+          LATEST_VERSION=$(ls | grep acm_*)
           echo "Successfully generated $LATEST_VERSION"
 
       - name: Create GitHub Release
