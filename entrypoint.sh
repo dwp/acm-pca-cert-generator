@@ -39,7 +39,7 @@ else
 fi
 
 if [ !"${LOG_LEVEL}" ]; then
-    LOG_LEVEL="info"
+    LOG_LEVEL="INFO"
 fi
 
 # Retrieve certificates
@@ -48,17 +48,33 @@ KEYSTORE_PASSWORD=$(uuidgen -r)
 PRIVATE_KEY_PASSWORD=$(uuidgen -r)
 ACM_KEY_PASSWORD=$(uuidgen -r)
 
+if [ "${LOG_LEVEL}" == "DEBUG" ]; then
+    echo "INFO: Start up params"
+    echo "acm-cert-arn: ${ACM_CERT_ARN} \n
+    acm-key-passphrase: ${ACM_KEY_PASSWORD} \n
+    add-downloaded-chain-to-keystore: true \n
+    keystore-path: /acm-cert-helper/keystore.jks \n
+    keystore-password: ${KEYSTORE_PASSWORD} \n
+    private-key:-alias ${PRIVATE_KEY_ALIAS} \n
+    private-key:-password ${PRIVATE_KEY_PASSWORD} \n
+    truststore-path: /acm-cert-helper/truststore.jks \n
+    truststore-password: ${TRUSTSTORE_PASSWORD} \n
+    truststore-aliases: ${TRUSTSTORE_ALIASES} \n
+    truststore-certs: ${TRUSTSTORE_CERTS} \n
+    log-level: ${LOG_LEVEL}"
+fi
+
 echo "INFO: Starting acm-cert-helper..."
 exec acm-cert-retriever \
 --acm-cert-arn "${ACM_CERT_ARN}" \
---acm-key-passphrase "$ACM_KEY_PASSWORD" \
+--acm-key-passphrase "${ACM_KEY_PASSWORD}" \
 --add-downloaded-chain-to-keystore true \
 --keystore-path "/acm-cert-helper/keystore.jks" \
---keystore-password "$KEYSTORE_PASSWORD" \
+--keystore-password "${KEYSTORE_PASSWORD}" \
 --private-key-alias "${PRIVATE_KEY_ALIAS}" \
---private-key-password "$PRIVATE_KEY_PASSWORD" \
+--private-key-password "${PRIVATE_KEY_PASSWORD}" \
 --truststore-path "/acm-cert-helper/truststore.jks" \
---truststore-password "$TRUSTSTORE_PASSWORD" \
+--truststore-password "${TRUSTSTORE_PASSWORD}" \
 --truststore-aliases "${TRUSTSTORE_ALIASES}" \
 --truststore-certs "${TRUSTSTORE_CERTS}" \
 --log-level ${LOG_LEVEL}
