@@ -6,7 +6,6 @@ on:
       - ".circleci/**"
       - ".github/workflows/**"
       - "ci/**"
-      - "Dockerfile"
 
 jobs:
   build:
