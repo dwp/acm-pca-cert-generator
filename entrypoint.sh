@@ -48,7 +48,7 @@ KEYSTORE_PASSWORD=$(uuidgen -r)
 PRIVATE_KEY_PASSWORD=$(uuidgen -r)
 ACM_KEY_PASSWORD=$(uuidgen -r)
 
-echo "INFO: Starting jmx-exporter..."
+echo "INFO: Starting acm-cert-helper..."
 exec acm-cert-retriever \
 --acm-cert-arn "${ACM_CERT_ARN}" \
 --acm-key-passphrase "$ACM_KEY_PASSWORD" \
@@ -60,4 +60,5 @@ exec acm-cert-retriever \
 --truststore-path "/acm-cert-helper/truststore.jks" \
 --truststore-password "$TRUSTSTORE_PASSWORD" \
 --truststore-aliases "${TRUSTSTORE_ALIASES}" \
---truststore-certs "${TRUSTSTORE_CERTS}" >> /var/log/acm-cert-retriever.log 2>&1
+--truststore-certs "${TRUSTSTORE_CERTS}" \
+--log-level ${LOG_LEVEL} >> /var/log/acm-cert-retriever.log 2>&1

@@ -29,7 +29,6 @@ RUN curl -k -LSs --output /tmp/acm_cert_helper.tar.gz \
     rm -f /tmp/acm_cert_helper.tar.gz
 
 RUN apk del \
-    libressl-dev \
     musl-dev \
     gcc \
     libffi-dev
