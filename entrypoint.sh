@@ -61,4 +61,4 @@ exec acm-cert-retriever \
 --truststore-password "$TRUSTSTORE_PASSWORD" \
 --truststore-aliases "${TRUSTSTORE_ALIASES}" \
 --truststore-certs "${TRUSTSTORE_CERTS}" \
---log-level ${LOG_LEVEL} >> /var/log/acm-cert-retriever.log 2>&1
+--log-level ${LOG_LEVEL}
