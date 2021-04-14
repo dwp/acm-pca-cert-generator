@@ -19,7 +19,8 @@ RUN apk add --update --no-cache \
     curl \
     aws-cli \
     gcc \
-    musl-dev
+    musl-dev \
+    util-linux
 
 # Download acm-cert-helper
 RUN curl -k -LSs --output /tmp/acm_cert_helper.tar.gz \
