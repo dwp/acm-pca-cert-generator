@@ -53,9 +53,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
 
-      - name: Generate artifacts directory
-        run: mkdir artefacts
-
       - name: Set up Python 3.7
         uses: actions/setup-python@v1
         with:
@@ -64,7 +61,7 @@ jobs:
       - name: Install dependencies
         run: |
           sed -i -e "s/version=\"0.0.0\"/version=\"${{ needs.get-publish-version.outputs.publish-version }}\"/" setup.py
-          python setup.py sdist --dist-dir artefacts
+          python setup.py sdist --dist-dir .
 
       - name: Create GitHub Release
         id: create_release
@@ -84,7 +81,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artefacts/acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
-          asset_name: artefacts/acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
+          asset_path: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
+          asset_name: acm_cert_helper${{ needs.get-publish-version.outputs.publish-version }}.tar.gz
           asset_content_type: application/x-tar
           
