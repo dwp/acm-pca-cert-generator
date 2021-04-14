@@ -57,17 +57,3 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           tags: "latest, ${{ needs.get-publish-version.outputs.publish-version }}"
           tag_semver: true
-
-  snyk-monitor:
-    runs-on: ubuntu-latest
-    needs: publish-docker
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run Snyk monitoring
-        uses: snyk/actions/docker@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor
-          image: ${{ env.IMAGE_NAME }}
-          args: --file=Dockerfile --policy-path=./.snyk --org=dwp-dataworks
