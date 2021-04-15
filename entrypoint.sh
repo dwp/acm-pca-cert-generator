@@ -38,7 +38,7 @@ else
     echo "INFO: Using attached IAM roles/instance profiles to authenticate as no AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY have been provided"
 fi
 
-if [ !"${LOG_LEVEL}" ]; then
+if [ -z "${LOG_LEVEL}" ]; then
     LOG_LEVEL="INFO"
 fi
 
