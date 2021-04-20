@@ -191,3 +191,44 @@ acm-cert-retriever \
 ```
 
 The `private-key-alias` can be any string unique to your deployment.
+
+
+### Container Image
+
+The container image in the same pattern as the standard process.  The entrypoint is designed in such a way that you can pass the required parameters via environemnt variables. eg.
+```
+environment_variables = jsonencode([
+      {
+        name  = "LOG_LEVEL",
+        value = "DEBUG"
+      },
+      {
+        name  = "ACM_CERT_ARN",
+        value = "${data.terraform_remote_state.snapshot_sender.outputs.ss_cert[0].arn}"
+      },
+      {
+        name  = "PRIVATE_KEY_ALIAS",
+        value = "${local.environment}"
+      },
+      {
+        name  = "TRUSTSTORE_ALIASES",
+        value = "${local.ss_host_truststore_aliases[local.environment]}"
+      },
+      {
+        name  = "TRUSTSTORE_CERTS",
+        value = "${local.ss_host_truststore_certs[local.environment]}"
+      }
+    ])
+```
+
+By running the container as a sidecar, and sharing the same mount point, you can use the container image to retrieve certs for your other containers.
+
+```
+mount_points = jsonencode([
+      {
+        "container_path" : "/acm-cert-helper",
+        "source_volume" : "certs"
+      }
+    ])
+```
+The containers sharing this mount point can install certs from this location.
