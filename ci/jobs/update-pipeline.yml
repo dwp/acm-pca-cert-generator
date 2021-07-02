@@ -25,5 +25,5 @@ jobs:
             - name: acm-pca-cert-generator
           outputs:
             - name: pipeline
-      - set_pipeline: acm-pca-cert-generator
+      - set_pipeline: asset-mgmt-acm-pca-cert-generator
         file: pipeline/aviator_pipeline.yml
