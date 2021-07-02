@@ -1,0 +1,7 @@
+groups:
+  - name: master
+    jobs:
+      - mirror-acm-pca-cert-generator
+  - name: update-pipeline
+    jobs:
+      - update-pipeline
