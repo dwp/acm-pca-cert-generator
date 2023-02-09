@@ -4,3 +4,4 @@ pyjks
 pyopenssl
 pycryptodome
 retrying
+cryptography>=39.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
