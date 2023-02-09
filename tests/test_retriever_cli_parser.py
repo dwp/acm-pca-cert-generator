@@ -3,7 +3,6 @@ from acm_cert_retriever import retriever
 
 
 def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_list():
-
     # add-downloaded-chain-to-keystore Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'
     args = """
         --acm-cert-arn A
@@ -37,7 +36,6 @@ def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_correct_
 
 
 def test_parse_args_for_retrieve_cert_add_downloaded_chain_to_keystore_is_optional():
-
     # add-downloaded-chain-to-keystore Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'
     args = """
         --acm-cert-arn A
@@ -70,7 +68,6 @@ def test_parse_args_for_retrieve_cert_add_downloaded_chain_to_keystore_is_option
 
 
 def test_parse_args_for_retrieve_cert_will_return_valid_args_when_given_valid_env_vars():
-
     os.environ["RETRIEVER_ACM_CERT_ARN"] = "A"
     os.environ["RETRIEVER_ACM_KEY_PASSPHRASE"] = "B"
     # Allowed missing, 'true', 'false', 'yes', 'no', '1', 0'
