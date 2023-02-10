@@ -97,7 +97,6 @@ def test_parse_args_for_certgen_will_return_valid_args_when_given_correct_list()
 
 
 def test_parse_args_for_certgen_will_return_valid_args_when_given_valid_env_vars():
-
     os.environ["CERTGEN_KEY_TYPE"] = "DSA"
     os.environ["CERTGEN_KEY_LENGTH"] = "8192"
     os.environ["CERTGEN_KEY_DIGEST_ALGORITHM"] = "sha384"
