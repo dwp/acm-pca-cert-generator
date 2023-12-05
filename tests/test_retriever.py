@@ -120,7 +120,6 @@ class TestRetriever(unittest.TestCase):
         mocked_generate_keystore,
         mocked_parse_trusted_cert_arg,
     ):
-
         # Given
         dummy_args = make_tuple(copy.deepcopy(template_args))
 
@@ -193,7 +192,6 @@ class TestRetriever(unittest.TestCase):
         mocked_generate_keystore,
         mocked_parse_trusted_cert_arg,
     ):
-
         # Given
         no_download = copy.deepcopy(template_args)
         no_download["add_downloaded_chain_to_keystore"] = False
