@@ -1,3 +1,5 @@
+# DO NOT USE THIS REPO - MIGRATED TO GITLAB
+
 # acm-cert-helper
 
 This contains two related utilities, both of which are detailed below, that work with ACM
